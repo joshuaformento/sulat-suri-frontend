@@ -161,7 +161,11 @@ export default function Dashboard() {
     const [sections, setSections] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    
+    const [selectedSection, setSelectedSection] = useState<any>(null);
+    const [students, setStudents] = useState<any[]>([]);
+    const [studentsLoading, setStudentsLoading] = useState(false);
+    const [studentsError, setStudentsError] = useState("");
+
     useEffect(() => {
       setLoading(true);
       setError("");
@@ -181,7 +185,29 @@ export default function Dashboard() {
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
     }, [token]);
-  
+
+    // Fetch students when a section is selected
+    useEffect(() => {
+      if (!selectedSection) return;
+      setStudentsLoading(true);
+      setStudentsError("");
+      fetch(`http://localhost:3000/api/v1/student/section/${selectedSection.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || "Failed to fetch students");
+          }
+          return res.json();
+        })
+        .then((data) => setStudents(Array.isArray(data.data) ? data.data : []))
+        .catch((err) => setStudentsError(err.message))
+        .finally(() => setStudentsLoading(false));
+    }, [selectedSection, token]);
+
     return (
       <Card className="p-6 mt-6 bg-purple-900 text-white">
         <h2 className="font-semibold text-xl mb-4">Graded Sections</h2>
@@ -193,13 +219,39 @@ export default function Dashboard() {
         {!loading && !error && sections.length > 0 && (
           <ul className="space-y-4">
             {sections.map((section) => (
-              <li key={section.id} className="border-b border-purple-700 pb-2">
+              <li
+                key={section.id}
+                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${selectedSection?.id === section.id ? "bg-purple-700" : ""}`}
+                onClick={() => setSelectedSection(section)}
+              >
                 <div className="font-bold">{section.name}</div>
                 <div className="text-sm text-gray-300">Graded Essays: {section.gradedEssayCount ?? "N/A"}</div>
-                {/* Add more section details as needed */}
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Students List */}
+        {selectedSection && (
+          <div className="mt-6">
+            <h3 className="font-semibold text-lg mb-2">
+              Students in {selectedSection.name}
+            </h3>
+            {studentsLoading && <div className="text-gray-300">Loading students...</div>}
+            {studentsError && <div className="text-red-400">{studentsError}</div>}
+            {!studentsLoading && !studentsError && students.length === 0 && (
+              <div className="text-gray-300">No students found in this section.</div>
+            )}
+            {!studentsLoading && !studentsError && students.length > 0 && (
+              <ul className="space-y-2">
+                {students.map((student) => (
+                  <li key={student.id} className="border-b border-purple-700 pb-1">
+                    {student.firstName} {student.lastName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </Card>
     );
