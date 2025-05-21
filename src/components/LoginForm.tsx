@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+// Update the path below if your auth store is in a different location
+import { useAuthStore } from "../store/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +13,42 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const login = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:3000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      console.log("LOGIN RESPONSE:", data); // <-- Add this
+      if (!res.ok) throw new Error(data.error || data.message || "Login failed");
+
+      login(data.user, data.user.token); // This saves user and token to Zustand and localStorage
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="overflow-hidden">
         <div className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8 order-1 border rounded-lg shadow-md md:row-span-2 bg-white">
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 md:p-8 order-1 border rounded-lg shadow-md md:row-span-2 bg-white"
+          >
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">LOGIN</h1>
@@ -24,6 +61,8 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="rounded-lg"
                   placeholder="m@batstate-u.edu.ph"
                   required
@@ -42,18 +81,30 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="rounded-lg"
                   required
                 />
               </div>
+              {error && (
+                <div className="text-red-500 text-center mt-2">{error}</div>
+              )}
               <Button type="submit" className="w-full bg-purple-700 rounded-lg">
                 Login
               </Button>
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
-                  Sign up
-                </a>
+              <div className="text-center mt-4 text-sm flex flex-col gap-1">
+                <span>
+                  Don't have an account?{" "}
+                  <Link to="/signup" className="text-purple-300 hover:underline">
+                    Sign up
+                  </Link>
+                </span>
+                <span>
+                  <Link to="/verify-email" className="text-purple-300 hover:underline">
+                    Verify your email
+                  </Link>
+                </span>
               </div>
             </div>
           </form>
