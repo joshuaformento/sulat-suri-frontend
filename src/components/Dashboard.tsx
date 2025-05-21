@@ -180,6 +180,10 @@ export default function Dashboard() {
     const [sections, setSections] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [selectedSection, setSelectedSection] = useState<any>(null);
+    const [students, setStudents] = useState<any[]>([]);
+    const [studentsLoading, setStudentsLoading] = useState(false);
+    const [studentsError, setStudentsError] = useState("");
 
     useEffect(() => {
       setLoading(true);
@@ -212,7 +216,13 @@ export default function Dashboard() {
         {!loading && !error && sections.length > 0 && (
           <ul className="space-y-4">
             {sections.map((section) => (
-              <li key={section.id} className="border-b border-purple-700 pb-2">
+              <li
+                key={section.id}
+                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${
+                  selectedSection?.id === section.id ? "bg-purple-700" : ""
+                }`}
+                onClick={() => setSelectedSection(section)}
+              >
                 <div className="font-bold">{section.name}</div>
                 <div className="text-sm text-gray-300">
                   Graded Essays: {section.gradedEssayCount ?? "N/A"}
@@ -221,6 +231,38 @@ export default function Dashboard() {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Students List */}
+        {selectedSection && (
+          <div className="mt-6">
+            <h3 className="font-semibold text-lg mb-2">
+              Students in {selectedSection.name}
+            </h3>
+            {studentsLoading && (
+              <div className="text-gray-300">Loading students...</div>
+            )}
+            {studentsError && (
+              <div className="text-red-400">{studentsError}</div>
+            )}
+            {!studentsLoading && !studentsError && students.length === 0 && (
+              <div className="text-gray-300">
+                No students found in this section.
+              </div>
+            )}
+            {!studentsLoading && !studentsError && students.length > 0 && (
+              <ul className="space-y-2">
+                {students.map((student) => (
+                  <li
+                    key={student.id}
+                    className="border-b border-purple-700 pb-1"
+                  >
+                    {student.firstName} {student.lastName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </Card>
     );
