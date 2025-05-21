@@ -32,6 +32,10 @@ export default function Dashboard() {
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [gradingResults, setGradingResults] = useState<any[]>([]);
+  const [studentInfoMap, setStudentInfoMap] = useState<{ [id: string]: any }>(
+    {}
+  );
+  const [sectionMap, setSectionMap] = useState<{ [id: string]: string }>({});
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -266,7 +270,58 @@ export default function Dashboard() {
         )}
       </Card>
     );
+
+    // eslint-disable-next-line
   };
+
+  useEffect(() => {
+    // Fetch student info for each grading result
+    const fetchStudentInfo = async () => {
+      const newMap: { [id: string]: any } = {};
+      await Promise.all(
+        gradingResults.map(async (result) => {
+          if (result.studentId && !studentInfoMap[result.studentId]) {
+            try {
+              const res = await fetch(
+                `http://localhost:3000/api/v1/student/${result.studentId}`,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              if (res.ok) {
+                const data = await res.json();
+                newMap[result.studentId] = data.data;
+              }
+            } catch {}
+          }
+        })
+      );
+      if (Object.keys(newMap).length > 0) {
+        setStudentInfoMap((prev) => ({ ...prev, ...newMap }));
+      }
+    };
+    if (gradingResults.length > 0) fetchStudentInfo();
+    // eslint-disable-next-line
+  }, [gradingResults, token]);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/v1/section", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const map: { [id: string]: string } = {};
+          (Array.isArray(data) ? data : data.data).forEach((section: any) => {
+            map[section.id] = section.name;
+          });
+          setSectionMap(map);
+        }
+      } catch {}
+    };
+    fetchSections();
+  }, [token]);
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-purple-600 to-purple-950 text-white">
@@ -540,44 +595,59 @@ export default function Dashboard() {
                   No grading results yet.
                 </div>
               ) : (
-                gradingResults.map((result) => (
-                  <div key={result.id} className="mb-6">
-                    <table className="w-full mt-4 text-sm">
-                      <thead>
-                        <tr className="text-left border-b border-gray-200">
-                          <th className="py-2">Criterion</th>
-                          <th>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Content</td>
-                          <td>{result.grades.content}</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Understanding</td>
-                          <td>{result.grades.understanding}</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Organization of Thoughts</td>
-                          <td>{result.grades["organization of thoughts"]}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2 font-bold">Total Grade</td>
-                          <td className="font-bold">
-                            {result.grades.total_grade}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="mt-4">
-                      <span className="font-semibold">Explanation:</span>
-                      <p className="mt-1 text-gray-200">
-                        {result.grades.explanation}
-                      </p>
+                gradingResults.map((result) => {
+                  // Get all criterion keys except explanation and total_grade
+                  const criterionKeys = Object.keys(result.grades).filter(
+                    (key) => key !== "explanation" && key !== "total_grade"
+                  );
+
+                  return (
+                    <div key={result.id} className="mb-6">
+                      {/* Student Info */}
+                      <div className="mb-2">
+                        <span className="font-semibold">Student:</span>{" "}
+                        {studentInfoMap[result.studentId]?.firstName}{" "}
+                        {studentInfoMap[result.studentId]?.lastName}
+                        <span className="ml-4 font-semibold">
+                          Section:
+                        </span>{" "}
+                        {
+                          sectionMap[
+                            studentInfoMap[result.studentId]?.sectionId
+                          ]
+                        }
+                      </div>
+                      <table className="w-full mt-4 text-sm">
+                        <thead>
+                          <tr className="text-left border-b border-gray-200">
+                            <th className="py-2">Criterion</th>
+                            <th>Score</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {criterionKeys.map((key) => (
+                            <tr key={key} className="border-b border-gray-200">
+                              <td className="py-2">{key}</td>
+                              <td>{result.grades[key]}</td>
+                            </tr>
+                          ))}
+                          <tr>
+                            <td className="py-2 font-bold">Total Grade</td>
+                            <td className="font-bold">
+                              {result.grades.total_grade}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="mt-4">
+                        <span className="font-semibold">Explanation:</span>
+                        <p className="mt-1 text-gray-200">
+                          {result.grades.explanation}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </Card>
           </>
