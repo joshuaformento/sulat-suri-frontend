@@ -10,7 +10,7 @@ export default function AboutUs() {
           Our goal is to help teachers save time and provide fair, consistent feedback to students.
         </p>
         <p className="mt-4">
-          This project is part of our thesis for the Bachelor of Science in Computer Engineering program.
+          This project is part of our thesis for the Bachelor of Science in Computer Engineering proram.
         </p>
         <p className="mt-4">
           For more information, contact us at <a href="mailto:info@example.com" className="text-purple-700 underline">info@example.com</a>
