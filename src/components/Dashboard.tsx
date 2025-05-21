@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Settings, LogOut, HelpCircle, Info, Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Settings,
+  LogOut,
+  HelpCircle,
+  Info,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { IoMdCloudUpload } from "react-icons/io";
 import { LuNotepadText } from "react-icons/lu";
 import { FaCircleCheck } from "react-icons/fa6";
@@ -33,7 +41,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleReferenceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReferenceFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setUploadError("");
     setUploadSuccess("");
     if (e.target.files && e.target.files[0]) {
@@ -42,15 +52,22 @@ export default function Dashboard() {
   };
 
   // Rubrics handlers
-  const handleRubricChange = (idx: number, field: "name" | "description", value: string) => {
+  const handleRubricChange = (
+    idx: number,
+    field: "name" | "description",
+    value: string
+  ) => {
     setRubrics((prev) =>
       prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r))
     );
   };
 
-  const addRubric = () => setRubrics([...rubrics, { name: "", description: "" }]);
+  const addRubric = () =>
+    setRubrics([...rubrics, { name: "", description: "" }]);
   const removeRubric = (idx: number) =>
-    setRubrics(rubrics.length > 1 ? rubrics.filter((_, i) => i !== idx) : rubrics);
+    setRubrics(
+      rubrics.length > 1 ? rubrics.filter((_, i) => i !== idx) : rubrics
+    );
 
   const handleGradeEssay = async () => {
     setUploadError("");
@@ -67,14 +84,14 @@ export default function Dashboard() {
       setUploadError("Please select a reference file.");
       return;
     }
-    if (rubrics.some(r => !r.name.trim() || !r.description.trim())) {
+    if (rubrics.some((r) => !r.name.trim() || !r.description.trim())) {
       setUploadError("Please fill out all rubric fields.");
       return;
     }
 
     // Convert rubrics array to object
     const rubricObj = Object.fromEntries(
-      rubrics.map(r => [r.name.trim(), r.description.trim()])
+      rubrics.map((r) => [r.name.trim(), r.description.trim()])
     );
 
     const formData = new FormData();
@@ -95,7 +112,9 @@ export default function Dashboard() {
         throw new Error(data.message || "Upload failed");
       }
       const result = await res.json();
-      setUploadSuccess("Essays and reference uploaded and graded successfully!");
+      setUploadSuccess(
+        "Essays and reference uploaded and graded successfully!"
+      );
       setEssayFiles([]);
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
@@ -186,28 +205,6 @@ export default function Dashboard() {
         .finally(() => setLoading(false));
     }, [token]);
 
-    // Fetch students when a section is selected
-    useEffect(() => {
-      if (!selectedSection) return;
-      setStudentsLoading(true);
-      setStudentsError("");
-      fetch(`http://localhost:3000/api/v1/student/section/${selectedSection.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.message || "Failed to fetch students");
-          }
-          return res.json();
-        })
-        .then((data) => setStudents(Array.isArray(data.data) ? data.data : []))
-        .catch((err) => setStudentsError(err.message))
-        .finally(() => setStudentsLoading(false));
-    }, [selectedSection, token]);
-
     return (
       <Card className="p-6 mt-6 bg-purple-900 text-white">
         <h2 className="font-semibold text-xl mb-4">Graded Sections</h2>
@@ -221,11 +218,16 @@ export default function Dashboard() {
             {sections.map((section) => (
               <li
                 key={section.id}
-                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${selectedSection?.id === section.id ? "bg-purple-700" : ""}`}
+                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${
+                  selectedSection?.id === section.id ? "bg-purple-700" : ""
+                }`}
                 onClick={() => setSelectedSection(section)}
               >
                 <div className="font-bold">{section.name}</div>
-                <div className="text-sm text-gray-300">Graded Essays: {section.gradedEssayCount ?? "N/A"}</div>
+                <div className="text-sm text-gray-300">
+                  Graded Essays: {section.gradedEssayCount ?? "N/A"}
+                </div>
+                {/* Add more section details as needed */}
               </li>
             ))}
           </ul>
@@ -237,15 +239,24 @@ export default function Dashboard() {
             <h3 className="font-semibold text-lg mb-2">
               Students in {selectedSection.name}
             </h3>
-            {studentsLoading && <div className="text-gray-300">Loading students...</div>}
-            {studentsError && <div className="text-red-400">{studentsError}</div>}
+            {studentsLoading && (
+              <div className="text-gray-300">Loading students...</div>
+            )}
+            {studentsError && (
+              <div className="text-red-400">{studentsError}</div>
+            )}
             {!studentsLoading && !studentsError && students.length === 0 && (
-              <div className="text-gray-300">No students found in this section.</div>
+              <div className="text-gray-300">
+                No students found in this section.
+              </div>
             )}
             {!studentsLoading && !studentsError && students.length > 0 && (
               <ul className="space-y-2">
                 {students.map((student) => (
-                  <li key={student.id} className="border-b border-purple-700 pb-1">
+                  <li
+                    key={student.id}
+                    className="border-b border-purple-700 pb-1"
+                  >
                     {student.firstName} {student.lastName}
                   </li>
                 ))}
@@ -274,45 +285,73 @@ export default function Dashboard() {
         aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         style={{ transition: "left 0.2s" }}
       >
-        {sidebarCollapsed ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+        {sidebarCollapsed ? (
+          <ChevronRight className="w-6 h-6" />
+        ) : (
+          <ChevronLeft className="w-6 h-6" />
+        )}
       </button>
 
       {/* Sidebar */}
       <aside
         className={`
-          fixed z-40 top-0 left-0 h-full ${sidebarCollapsed ? "w-20" : "w-64"} p-6 bg-purple-600 flex flex-col transition-all duration-200
+          fixed z-40 top-0 left-0 h-full ${
+            sidebarCollapsed ? "w-20" : "w-64"
+          } p-6 bg-purple-600 flex flex-col transition-all duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:relative md:translate-x-0 md:flex
         `}
       >
-        <h1 className={`text-xl font-bold ${sidebarCollapsed ? "text-center" : ""}`}>
+        <h1
+          className={`text-xl font-bold ${
+            sidebarCollapsed ? "text-center" : ""
+          }`}
+        >
           <img
             src="./src/assets/images/logo.png"
-            className={`pb-3 ${sidebarCollapsed ? "w-12" : "w-24"} justify-center text-center inline-block pr-4`}
+            className={`pb-3 ${
+              sidebarCollapsed ? "w-12" : "w-24"
+            } justify-center text-center inline-block pr-4`}
             alt="Sulat-Suri Logo"
           />
           {!sidebarCollapsed && "Sulat-Suri"}
         </h1>
-        <nav className={`mt-6 flex flex-col gap-2 ${sidebarCollapsed ? "items-center" : ""}`}>
+        <nav
+          className={`mt-6 flex flex-col gap-2 ${
+            sidebarCollapsed ? "items-center" : ""
+          }`}
+        >
           <Button
             variant={activeTab === "grading" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${sidebarCollapsed ? "px-2 py-2" : ""}`}
+            className={`justify-start w-full ${
+              sidebarCollapsed ? "px-2 py-2" : ""
+            }`}
             onClick={() => {
               setActiveTab("grading");
               setSidebarOpen(false);
             }}
           >
-            {sidebarCollapsed ? <span className="sr-only">Grading</span> : "Grading"}
+            {sidebarCollapsed ? (
+              <span className="sr-only">Grading</span>
+            ) : (
+              "Grading"
+            )}
           </Button>
           <Button
             variant={activeTab === "sections" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${sidebarCollapsed ? "px-2 py-2" : ""}`}
+            className={`justify-start w-full ${
+              sidebarCollapsed ? "px-2 py-2" : ""
+            }`}
             onClick={() => {
               setActiveTab("sections");
               setSidebarOpen(false);
             }}
           >
-            {sidebarCollapsed ? <span className="sr-only">Sections</span> : "Sections"}
+            {sidebarCollapsed ? (
+              <span className="sr-only">Sections</span>
+            ) : (
+              "Sections"
+            )}
           </Button>
         </nav>
         {!sidebarCollapsed && (
@@ -320,13 +359,23 @@ export default function Dashboard() {
             <div className="mt-8">
               <h2 className="text-sm font-semibold">Previous Outputs</h2>
               <ul className="mt-2 space-y-1 text-gray-300">
-                <li className="cursor-pointer hover:text-white">USER STORY.pdf</li>
-                <li className="cursor-pointer hover:text-white">grades 2nd sem.pdf</li>
-                <li className="cursor-pointer hover:text-white">grades 2nd sem.pdf</li>
+                <li className="cursor-pointer hover:text-white">
+                  USER STORY.pdf
+                </li>
+                <li className="cursor-pointer hover:text-white">
+                  grades 2nd sem.pdf
+                </li>
+                <li className="cursor-pointer hover:text-white">
+                  grades 2nd sem.pdf
+                </li>
               </ul>
             </div>
             <div className="mt-auto pt-8">
-              <Button variant="ghost" className="p-2 w-full justify-start" onClick={() => setSettingsOpen(true)}>
+              <Button
+                variant="ghost"
+                className="p-2 w-full justify-start"
+                onClick={() => setSettingsOpen(true)}
+              >
                 <Settings className="w-5 h-5 mr-2" />
                 Settings
               </Button>
@@ -353,7 +402,11 @@ export default function Dashboard() {
               </h1>
               <div className="flex items-center gap-4">
                 <span>Welcome, Teacher</span>
-                <Button variant="ghost" className="p-2" onClick={() => setSettingsOpen(true)}>
+                <Button
+                  variant="ghost"
+                  className="p-2"
+                  onClick={() => setSettingsOpen(true)}
+                >
                   <Settings className="w-5 h-5" />
                 </Button>
               </div>
@@ -430,14 +483,18 @@ export default function Dashboard() {
                     type="text"
                     placeholder="Criteria Name"
                     value={rubric.name}
-                    onChange={(e) => handleRubricChange(idx, "name", e.target.value)}
+                    onChange={(e) =>
+                      handleRubricChange(idx, "name", e.target.value)
+                    }
                     className="flex-1 rounded px-2 py-1 text-black"
                   />
                   <input
                     type="text"
                     placeholder="Description"
                     value={rubric.description}
-                    onChange={(e) => handleRubricChange(idx, "description", e.target.value)}
+                    onChange={(e) =>
+                      handleRubricChange(idx, "description", e.target.value)
+                    }
                     className="flex-1 rounded px-2 py-1 text-black"
                   />
                   <Button
@@ -472,14 +529,16 @@ export default function Dashboard() {
               <div className="text-red-400 mt-2">{uploadError}</div>
             )}
             {uploadSuccess && (
-              <div className="text-green-400 mt-2">{uploadSuccess}</div>
+              <div className="text-gray-50 mt-2">{uploadSuccess}</div>
             )}
 
             {/* Results Section */}
             <Card className="p-6 mt-6 bg-purple-900 text-white">
               <h2 className="font-semibold">Grading Results</h2>
               {gradingResults.length === 0 ? (
-                <div className="text-gray-300 mt-4">No grading results yet.</div>
+                <div className="text-gray-300 mt-4">
+                  No grading results yet.
+                </div>
               ) : (
                 gradingResults.map((result) => (
                   <div key={result.id} className="mb-6">
@@ -505,13 +564,17 @@ export default function Dashboard() {
                         </tr>
                         <tr>
                           <td className="py-2 font-bold">Total Grade</td>
-                          <td className="font-bold">{result.grades.total_grade}</td>
+                          <td className="font-bold">
+                            {result.grades.total_grade}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
                     <div className="mt-4">
                       <span className="font-semibold">Explanation:</span>
-                      <p className="mt-1 text-gray-200">{result.grades.explanation}</p>
+                      <p className="mt-1 text-gray-200">
+                        {result.grades.explanation}
+                      </p>
                     </div>
                   </div>
                 ))
