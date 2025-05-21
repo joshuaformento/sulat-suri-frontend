@@ -19,6 +19,8 @@ import { useAuthStore } from "../store/auth";
 export default function Dashboard() {
   const token = useAuthStore((state) => state.token);
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const fullName = user?.fullName;
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"grading" | "sections">("grading");
   const [sidebarOpen, setSidebarOpen] = useState(true); // default open on desktop
@@ -357,58 +359,74 @@ export default function Dashboard() {
           md:relative md:translate-x-0 md:flex
         `}
       >
-        <h1
-          className={`text-xl font-bold ${
-            sidebarCollapsed ? "text-center" : ""
-          }`}
-        >
-          <img
-            src="./src/assets/images/logo.png"
-            className={`pb-3 ${
-              sidebarCollapsed ? "w-12" : "w-24"
-            } justify-center text-center inline-block pr-4`}
-            alt="Sulat-Suri Logo"
-          />
-          {!sidebarCollapsed && "Sulat-Suri"}
-        </h1>
-        <nav
-          className={`mt-6 flex flex-col gap-2 ${
-            sidebarCollapsed ? "items-center" : ""
-          }`}
-        >
-          <Button
-            variant={activeTab === "grading" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${
-              sidebarCollapsed ? "px-2 py-2" : ""
+        {/* Hide logo/title when collapsed */}
+        {!sidebarCollapsed && (
+          <h1 className="text-xl font-bold mt-11">
+            <img
+              src="./src/assets/images/logo.png"
+              className="pb-3 w-24 justify-center text-center inline-block pr-4"
+              alt="Sulat-Suri Logo"
+            />
+            Sulat-Suri
+          </h1>
+        )}
+        {/* Always keep nav in the same vertical position */}
+        <div className={sidebarCollapsed ? "mt-32" : ""}>
+          <nav
+            className={`mt-6 flex flex-col gap-2 ${
+              sidebarCollapsed ? "items-center" : ""
             }`}
-            onClick={() => {
-              setActiveTab("grading");
-              setSidebarOpen(false);
-            }}
           >
-            {sidebarCollapsed ? (
-              <span className="sr-only">Grading</span>
-            ) : (
-              "Grading"
-            )}
-          </Button>
-          <Button
-            variant={activeTab === "sections" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${
-              sidebarCollapsed ? "px-2 py-2" : ""
-            }`}
-            onClick={() => {
-              setActiveTab("sections");
-              setSidebarOpen(false);
-            }}
-          >
-            {sidebarCollapsed ? (
-              <span className="sr-only">Sections</span>
-            ) : (
-              "Sections"
-            )}
-          </Button>
-        </nav>
+            {/* Grading Button */}
+            <div className="relative group w-full flex justify-center">
+              <Button
+                variant={activeTab === "grading" ? "secondary" : "ghost"}
+                className={`justify-start w-full ${
+                  sidebarCollapsed ? "px-2 py-2" : ""
+                }`}
+                onClick={() => {
+                  setActiveTab("grading");
+                  setSidebarOpen(false);
+                }}
+              >
+                {sidebarCollapsed ? (
+                  <span className="sr-only">Grading</span>
+                ) : (
+                  "Grading"
+                )}
+              </Button>
+              {sidebarCollapsed && (
+                <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Grading
+                </span>
+              )}
+            </div>
+            {/* Sections Button */}
+            <div className="relative group w-full flex justify-center">
+              <Button
+                variant={activeTab === "sections" ? "secondary" : "ghost"}
+                className={`justify-start w-full ${
+                  sidebarCollapsed ? "px-2 py-2" : ""
+                }`}
+                onClick={() => {
+                  setActiveTab("sections");
+                  setSidebarOpen(false);
+                }}
+              >
+                {sidebarCollapsed ? (
+                  <span className="sr-only">Sections</span>
+                ) : (
+                  "Sections"
+                )}
+              </Button>
+              {sidebarCollapsed && (
+                <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Sections
+                </span>
+              )}
+            </div>
+          </nav>
+        </div>
         {!sidebarCollapsed && (
           <>
             <div className="mt-8">
@@ -456,7 +474,7 @@ export default function Dashboard() {
                 Sulat-Suri: Automatic Essay Grading System
               </h1>
               <div className="flex items-center gap-4">
-                <span>Welcome, Teacher</span>
+                <span>Welcome, {fullName || "Teacher"}</span>
                 <Button
                   variant="ghost"
                   className="p-2"
@@ -471,7 +489,7 @@ export default function Dashboard() {
             <Card className="p-6 mb-6 bg-purple-900 text-white">
               <h2 className="font-semibold mb-2">
                 <IoMdCloudUpload className="inline-block scale-150 mr-3" />
-                Upload Essays (PDF, DOCX, TXT)
+                Upload Essays (PDF)
               </h2>
               <div className="relative w-full">
                 <input
@@ -502,7 +520,7 @@ export default function Dashboard() {
             <Card className="p-6 mb-6 bg-purple-900 text-white">
               <h2 className="font-semibold mb-2">
                 <IoMdCloudUpload className="inline-block scale-150 mr-3" />
-                Upload Reference Answer
+                Upload Reference Answer (PDF)
               </h2>
               <div className="relative w-full">
                 <input
