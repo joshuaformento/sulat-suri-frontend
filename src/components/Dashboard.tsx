@@ -560,7 +560,7 @@ export default function Dashboard() {
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="py-2">Organization of Thoughts</td>
-                          <td>{result.grades.organization_of_thoughts}</td>
+                          <td>{result.grades["organization of thoughts"]}</td>
                         </tr>
                         <tr>
                           <td className="py-2 font-bold">Total Grade</td>
