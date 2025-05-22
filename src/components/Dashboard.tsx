@@ -478,6 +478,12 @@ export default function Dashboard() {
       }
     };
 
+    useEffect(() => {
+      setSelectedStudent(null);
+      setStudentGrades(null);
+      setGradesError("");
+    }, [gradingResults]);
+
     return (
       <Card className="p-6 mt-6 bg-purple-900 text-white">
         <h2 className="font-semibold text-xl mb-4">Graded Sections</h2>
