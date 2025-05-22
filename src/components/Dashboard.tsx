@@ -381,12 +381,6 @@ export default function Dashboard() {
       }
     };
 
-    useEffect(() => {
-      setSelectedStudent(null);
-      setStudentGrades(null);
-      setGradesError("");
-    }, [gradingResults]);
-
     // Fetch sections
     useEffect(() => {
       setLoading(true);
