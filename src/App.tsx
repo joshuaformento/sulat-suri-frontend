@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/auth";
 import LoginPage from "./pages/LoginPage";
@@ -19,7 +24,7 @@ function App() {
   const token = useAuthStore((state) => state.token);
 
   // Protect dashboard route
-  const PrivateRoute = ({ children }: { children: JSX.Element }) =>
+  const PrivateRoute = ({ children }: { children: React.ReactNode }) =>
     token ? children : <Navigate to="/login" replace />;
 
   return (
@@ -37,7 +42,8 @@ function App() {
         />
         <Route path="/help-faq" element={<HelpFAQ />} />
         <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/verify-email/:token" element={<VerifyEmail />} /> {/* <-- Add this line */}
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />{" "}
+        {/* <-- Add this line */}
         <Route path="/verify-email" element={<RequestVerification />} />
         <Route
           path="/sections"
@@ -51,7 +57,11 @@ function App() {
         <Route
           path="*"
           element={
-            token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+            token ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
       </Routes>

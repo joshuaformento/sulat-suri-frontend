@@ -40,11 +40,10 @@ export default function Dashboard() {
     {}
   );
   const [sectionMap, setSectionMap] = useState<{ [id: string]: string }>({});
-    const gradingIds = useAuthStore((state) => state.gradingIds);
-  const gradingStudentIds = useAuthStore((state) => state.gradingStudentIds);
-  const gradingEssayIds = useAuthStore((state) => state.gradingEssayIds);
   const setGradingIds = useAuthStore((state) => state.setGradingIds);
-  const setGradingStudentIds = useAuthStore((state) => state.setGradingStudentIds);
+  const setGradingStudentIds = useAuthStore(
+    (state) => state.setGradingStudentIds
+  );
   const setGradingEssayIds = useAuthStore((state) => state.setGradingEssayIds);
   const [editingResult, setEditingResult] = useState<any>(null);
   const [editGrades, setEditGrades] = useState<any>({});
@@ -159,11 +158,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleEditClick = (result: any) => {
-    setEditingResult(result);
-    setEditGrades({ ...result.grades });
-  };
-
   const handleEditChange = (key: string, value: any) => {
     setEditGrades((prev: any) => ({ ...prev, [key]: value }));
   };
@@ -263,7 +257,7 @@ export default function Dashboard() {
     const [students, setStudents] = useState<any[]>([]);
     const [studentsLoading, setStudentsLoading] = useState(false);
     const [studentsError, setStudentsError] = useState("");
-    const [essays, setEssays] = useState<any[]>([]);
+    const [_essays, setEssays] = useState<any[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [studentGrades, setStudentGrades] = useState<any>(null);
     const [gradesLoading, setGradesLoading] = useState(false);
@@ -369,20 +363,20 @@ export default function Dashboard() {
       setGradesLoading(true);
       setGradesError("");
       setStudentGrades(null);
-    
+
       // Find the grading result for this student
       const gradingResult = gradingResults.find(
         (r) => r.studentId === student.id
       );
       const essayId = gradingResult?.essayId;
       const studentId = gradingResult?.studentId;
-    
+
       if (!essayId || !studentId) {
         setGradesError("No grading result found for this student.");
         setGradesLoading(false);
         return;
       }
-    
+
       try {
         const res = await fetch(
           `http://localhost:3000/api/v1/grades/essay/${essayId}/student/${studentId}`,
@@ -417,11 +411,6 @@ export default function Dashboard() {
         {!loading && !error && sections.length > 0 && (
           <ul className="space-y-4">
             {sections.map((section) => {
-              // Count graded essays for this section
-              const gradedCount = essays.filter(
-                (essay) => essay.sectionId === section.id && essay.grades
-              ).length;
-
               return (
                 <li
                   key={section.id}
@@ -442,7 +431,10 @@ export default function Dashboard() {
                       className="ml-4"
                       onClick={async (e) => {
                         e.stopPropagation();
-                        if (!window.confirm(`Delete section "${section.name}"?`)) return;
+                        if (
+                          !window.confirm(`Delete section "${section.name}"?`)
+                        )
+                          return;
                         try {
                           const res = await fetch(
                             `http://localhost:3000/api/v1/section/${section.id}`,
@@ -453,10 +445,15 @@ export default function Dashboard() {
                           );
                           if (!res.ok) {
                             const data = await res.json().catch(() => ({}));
-                            throw new Error(data.message || "Failed to delete section");
+                            throw new Error(
+                              data.message || "Failed to delete section"
+                            );
                           }
-                          setSections((prev) => prev.filter((s) => s.id !== section.id));
-                          if (selectedSection?.id === section.id) setSelectedSection(null);
+                          setSections((prev) =>
+                            prev.filter((s) => s.id !== section.id)
+                          );
+                          if (selectedSection?.id === section.id)
+                            setSelectedSection(null);
                         } catch (err: any) {
                           alert(err.message);
                         }
@@ -571,9 +568,12 @@ export default function Dashboard() {
                                   </span>{" "}
                                   <input
                                     type="number"
-                                    value={value}
-                                    onChange={e =>
-                                      handleEditGradesChange(key, Number(e.target.value))
+                                    value={value as any}
+                                    onChange={(e) =>
+                                      handleEditGradesChange(
+                                        key,
+                                        Number(e.target.value)
+                                      )
                                     }
                                     className="ml-2 rounded px-2 py-1 text-black w-20"
                                   />
@@ -586,8 +586,11 @@ export default function Dashboard() {
                           <input
                             type="text"
                             value={editGradesData.explanation}
-                            onChange={e =>
-                              handleEditGradesChange("explanation", e.target.value)
+                            onChange={(e) =>
+                              handleEditGradesChange(
+                                "explanation",
+                                e.target.value
+                              )
                             }
                             className="ml-2 rounded px-2 py-1 text-black w-full"
                           />
@@ -615,17 +618,23 @@ export default function Dashboard() {
                           <span className="font-bold">Grades:</span>
                           <ul className="ml-4 mt-2">
                             {Object.entries(studentGrades.grades)
-                              .filter(([key]) => key !== "explanation" && key !== "total_grade")
+                              .filter(
+                                ([key]) =>
+                                  key !== "explanation" && key !== "total_grade"
+                              )
                               .map(([key, value]) => (
                                 <li key={key}>
                                   <span className="font-semibold capitalize">
                                     {key.replace(/_/g, " ")}:
                                   </span>{" "}
-                                  {value}
+                                  {value as any}
                                 </li>
                               ))}
                             <li>
-                              <span className="font-semibold">Total Grade:</span> {studentGrades.grades.total_grade}
+                              <span className="font-semibold">
+                                Total Grade:
+                              </span>{" "}
+                              {studentGrades.grades.total_grade}
                             </li>
                           </ul>
                         </div>
@@ -1037,7 +1046,9 @@ export default function Dashboard() {
                             </div>
                           ))}
                           <div className="mb-2">
-                            <label className="font-semibold">Explanation:</label>
+                            <label className="font-semibold">
+                              Explanation:
+                            </label>
                             <input
                               type="text"
                               value={editGrades.explanation}
