@@ -261,7 +261,7 @@ export default function Dashboard() {
   );
 
   // Placeholder components for other tabs
-  const SectionsTab = () => {
+  const SectionsTab = ({ gradingResults }: { gradingResults: any[] }) => {
     const [sections, setSections] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -1187,7 +1187,9 @@ export default function Dashboard() {
             </Card>
           </>
         )}
-        {activeTab === "sections" && <SectionsTab />}
+        {activeTab === "sections" && (
+          <SectionsTab gradingResults={gradingResults} />
+        )}
       </main>
       {settingsOpen && <SettingsModal />}
     </div>
