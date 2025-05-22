@@ -371,6 +371,13 @@ export default function Dashboard() {
         .finally(() => setStudentsLoading(false));
     }, [selectedSection, token]);
 
+    // Reset selectedStudent and grades when section changes
+    useEffect(() => {
+      setSelectedStudent(null);
+      setStudentGrades(null);
+      setGradesError("");
+    }, [selectedSection]);
+
     // Handle student click
     const handleStudentClick = async (student: any) => {
       setSelectedStudent(student);
