@@ -876,6 +876,19 @@ export default function Dashboard() {
     }
   }, [activeTab]);
 
+  // Helper to get only the latest result per (student, section)
+  function getLatestGradingResults(results: any[]) {
+    const map = new Map();
+    for (const r of results) {
+      const sectionId = r.sectionId || studentInfoMap[r.studentId]?.sectionId;
+      if (!sectionId) continue;
+      const key = `${r.studentId}-${sectionId}`;
+      // If you want the latest by date, compare timestamps here
+      map.set(key, r);
+    }
+    return Array.from(map.values());
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-r from-purple-600 to-purple-950 text-white">
       {/* Burger menu for mobile and desktop */}
@@ -1301,7 +1314,9 @@ export default function Dashboard() {
           </>
         )}
         {activeTab === "sections" && (
-          <SectionsTab gradingResults={gradingResults} />
+          <SectionsTab
+            gradingResults={getLatestGradingResults(gradingResults)}
+          />
         )}
       </main>
       {settingsOpen && <SettingsModal />}
