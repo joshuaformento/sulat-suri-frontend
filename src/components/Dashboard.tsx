@@ -1252,3 +1252,36 @@ export default function Dashboard() {
     </div>
   );
 }
+useEffect(() => {
+  // Clean up gradingResults for students that no longer exist
+  const cleanGradingResults = async () => {
+    if (!gradingResults.length) return;
+    // Get all unique studentIds from gradingResults
+    const studentIds = Array.from(
+      new Set(gradingResults.map((r) => r.studentId))
+    );
+    // Check which students still exist
+    const stillExists: Record<string, boolean> = {};
+    await Promise.all(
+      studentIds.map(async (id) => {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/v1/student/${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          stillExists[id] = res.ok;
+        } catch {
+          stillExists[id] = false;
+        }
+      })
+    );
+    // Filter out gradingResults for students that no longer exist
+    const filtered = gradingResults.filter((r) => stillExists[r.studentId]);
+    if (filtered.length !== gradingResults.length) {
+      setGradingResults(filtered);
+      localStorage.setItem("gradingResults", JSON.stringify(filtered));
+    }
+  };
+  cleanGradingResults();
+  // eslint-disable-next-line
+}, [gradingResults, token]);
