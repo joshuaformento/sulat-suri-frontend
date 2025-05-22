@@ -1,16 +1,28 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Settings, LogOut, HelpCircle, Info, Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Settings,
+  LogOut,
+  HelpCircle,
+  Info,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { IoMdCloudUpload } from "react-icons/io";
 import { LuNotepadText } from "react-icons/lu";
 import { FaCircleCheck } from "react-icons/fa6";
+import { FaRegCheckCircle } from "react-icons/fa"; // Add this for Grading icon
+import { PiUsersThree } from "react-icons/pi"; // Add this for Sections icon
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth";
 
 export default function Dashboard() {
   const token = useAuthStore((state) => state.token);
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const fullName = user?.fullName;
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"grading" | "sections">("grading");
   const [sidebarOpen, setSidebarOpen] = useState(true); // default open on desktop
@@ -24,6 +36,10 @@ export default function Dashboard() {
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [gradingResults, setGradingResults] = useState<any[]>([]);
+  const [studentInfoMap, setStudentInfoMap] = useState<{ [id: string]: any }>(
+    {}
+  );
+  const [sectionMap, setSectionMap] = useState<{ [id: string]: string }>({});
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -33,7 +49,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleReferenceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReferenceFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setUploadError("");
     setUploadSuccess("");
     if (e.target.files && e.target.files[0]) {
@@ -42,15 +60,22 @@ export default function Dashboard() {
   };
 
   // Rubrics handlers
-  const handleRubricChange = (idx: number, field: "name" | "description", value: string) => {
+  const handleRubricChange = (
+    idx: number,
+    field: "name" | "description",
+    value: string
+  ) => {
     setRubrics((prev) =>
       prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r))
     );
   };
 
-  const addRubric = () => setRubrics([...rubrics, { name: "", description: "" }]);
+  const addRubric = () =>
+    setRubrics([...rubrics, { name: "", description: "" }]);
   const removeRubric = (idx: number) =>
-    setRubrics(rubrics.length > 1 ? rubrics.filter((_, i) => i !== idx) : rubrics);
+    setRubrics(
+      rubrics.length > 1 ? rubrics.filter((_, i) => i !== idx) : rubrics
+    );
 
   const handleGradeEssay = async () => {
     setUploadError("");
@@ -67,14 +92,14 @@ export default function Dashboard() {
       setUploadError("Please select a reference file.");
       return;
     }
-    if (rubrics.some(r => !r.name.trim() || !r.description.trim())) {
+    if (rubrics.some((r) => !r.name.trim() || !r.description.trim())) {
       setUploadError("Please fill out all rubric fields.");
       return;
     }
 
     // Convert rubrics array to object
     const rubricObj = Object.fromEntries(
-      rubrics.map(r => [r.name.trim(), r.description.trim()])
+      rubrics.map((r) => [r.name.trim(), r.description.trim()])
     );
 
     const formData = new FormData();
@@ -95,7 +120,9 @@ export default function Dashboard() {
         throw new Error(data.message || "Upload failed");
       }
       const result = await res.json();
-      setUploadSuccess("Essays and reference uploaded and graded successfully!");
+      setUploadSuccess(
+        "Essays and reference uploaded and graded successfully!"
+      );
       setEssayFiles([]);
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
@@ -190,6 +217,7 @@ export default function Dashboard() {
         .finally(() => setLoading(false));
     }, [token]);
 
+
     // Fetch essays (for mapping student to essayId)
     useEffect(() => {
       fetch("http://localhost:3000/api/v1/essays/", {
@@ -253,6 +281,7 @@ export default function Dashboard() {
       }
     };
 
+=======
     return (
       <Card className="p-6 mt-6 bg-purple-900 text-white">
         <h2 className="font-semibold text-xl mb-4">Graded Sections</h2>
@@ -266,9 +295,12 @@ export default function Dashboard() {
             {sections.map((section) => (
               <li
                 key={section.id}
-                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${selectedSection?.id === section.id ? "bg-purple-700" : ""}`}
+                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${
+                  selectedSection?.id === section.id ? "bg-purple-700" : ""
+                }`}
                 onClick={() => setSelectedSection(section)}
               >
+
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-bold">{section.name}</div>
@@ -299,6 +331,13 @@ export default function Dashboard() {
                     Delete
                   </Button>
                 </div>
+=======
+                <div className="font-bold">{section.name}</div>
+                <div className="text-sm text-gray-300">
+                  Graded Essays: {section.gradedEssayCount ?? "N/A"}
+                </div>
+                {/* Add more section details as needed */}
+
               </li>
             ))}
           </ul>
@@ -310,16 +349,23 @@ export default function Dashboard() {
             <h3 className="font-semibold text-lg mb-2">
               Students in {selectedSection.name}
             </h3>
-            {studentsLoading && <div className="text-gray-300">Loading students...</div>}
-            {studentsError && <div className="text-red-400">{studentsError}</div>}
+            {studentsLoading && (
+              <div className="text-gray-300">Loading students...</div>
+            )}
+            {studentsError && (
+              <div className="text-red-400">{studentsError}</div>
+            )}
             {!studentsLoading && !studentsError && students.length === 0 && (
-              <div className="text-gray-300">No students found in this section.</div>
+              <div className="text-gray-300">
+                No students found in this section.
+              </div>
             )}
             {!studentsLoading && !studentsError && students.length > 0 && (
               <ul className="space-y-2">
                 {students.map((student) => (
                   <li
                     key={student.id}
+
                     className="border-b border-purple-700 pb-1 flex items-center justify-between hover:bg-purple-800 cursor-pointer"
                     onClick={() => handleStudentClick(student)}
                   >
@@ -351,6 +397,11 @@ export default function Dashboard() {
                     >
                       Delete
                     </Button>
+=======
+                    className="border-b border-purple-700 pb-1"
+                  >
+                    {student.firstName} {student.lastName}
+
                   </li>
                 ))}
               </ul>
@@ -392,7 +443,58 @@ export default function Dashboard() {
         )}
       </Card>
     );
+
+    // eslint-disable-next-line
   };
+
+  useEffect(() => {
+    // Fetch student info for each grading result
+    const fetchStudentInfo = async () => {
+      const newMap: { [id: string]: any } = {};
+      await Promise.all(
+        gradingResults.map(async (result) => {
+          if (result.studentId && !studentInfoMap[result.studentId]) {
+            try {
+              const res = await fetch(
+                `http://localhost:3000/api/v1/student/${result.studentId}`,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              if (res.ok) {
+                const data = await res.json();
+                newMap[result.studentId] = data.data;
+              }
+            } catch {}
+          }
+        })
+      );
+      if (Object.keys(newMap).length > 0) {
+        setStudentInfoMap((prev) => ({ ...prev, ...newMap }));
+      }
+    };
+    if (gradingResults.length > 0) fetchStudentInfo();
+    // eslint-disable-next-line
+  }, [gradingResults, token]);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/v1/section", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const map: { [id: string]: string } = {};
+          (Array.isArray(data) ? data : data.data).forEach((section: any) => {
+            map[section.id] = section.name;
+          });
+          setSectionMap(map);
+        }
+      } catch {}
+    };
+    fetchSections();
+  }, [token]);
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-purple-600 to-purple-950 text-white">
@@ -411,59 +513,101 @@ export default function Dashboard() {
         aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         style={{ transition: "left 0.2s" }}
       >
-        {sidebarCollapsed ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+        {sidebarCollapsed ? (
+          <ChevronRight className="w-6 h-6" />
+        ) : (
+          <ChevronLeft className="w-6 h-6" />
+        )}
       </button>
 
       {/* Sidebar */}
       <aside
         className={`
-          fixed z-40 top-0 left-0 h-full ${sidebarCollapsed ? "w-20" : "w-64"} p-6 bg-purple-600 flex flex-col transition-all duration-200
+          fixed z-40 top-0 left-0 h-full ${
+            sidebarCollapsed ? "w-20" : "w-64"
+          } p-6 bg-purple-600 flex flex-col transition-all duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:relative md:translate-x-0 md:flex
         `}
       >
-        <h1 className={`text-xl font-bold ${sidebarCollapsed ? "text-center" : ""}`}>
-          <img
-            src="./src/assets/images/logo.png"
-            className={`pb-3 ${sidebarCollapsed ? "w-12" : "w-24"} justify-center text-center inline-block pr-4`}
-            alt="Sulat-Suri Logo"
-          />
-          {!sidebarCollapsed && "Sulat-Suri"}
-        </h1>
-        <nav className={`mt-6 flex flex-col gap-2 ${sidebarCollapsed ? "items-center" : ""}`}>
-          <Button
-            variant={activeTab === "grading" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${sidebarCollapsed ? "px-2 py-2" : ""}`}
-            onClick={() => {
-              setActiveTab("grading");
-              setSidebarOpen(false);
-            }}
+        {/* Hide logo/title when collapsed */}
+        {!sidebarCollapsed && (
+          <h1 className="text-xl font-bold mt-11">
+            <img
+              src="./src/assets/images/logo.png"
+              className="pb-3 w-24 justify-center text-center inline-block pr-4"
+              alt="Sulat-Suri Logo"
+            />
+            Sulat-Suri
+          </h1>
+        )}
+        {/* Always keep nav in the same vertical position */}
+        <div className={sidebarCollapsed ? "mt-32" : ""}>
+          <nav
+            className={`mt-6 flex flex-col gap-2 ${
+              sidebarCollapsed ? "items-center" : ""
+            }`}
           >
-            {sidebarCollapsed ? <span className="sr-only">Grading</span> : "Grading"}
-          </Button>
-          <Button
-            variant={activeTab === "sections" ? "secondary" : "ghost"}
-            className={`justify-start w-full ${sidebarCollapsed ? "px-2 py-2" : ""}`}
-            onClick={() => {
-              setActiveTab("sections");
-              setSidebarOpen(false);
-            }}
-          >
-            {sidebarCollapsed ? <span className="sr-only">Sections</span> : "Sections"}
-          </Button>
-        </nav>
+            {/* Grading Button */}
+            <div className="relative group w-full flex justify-center">
+              <Button
+                variant={activeTab === "grading" ? "secondary" : "ghost"}
+                className={`justify-start w-full ${
+                  sidebarCollapsed ? "px-2 py-2" : ""
+                }`}
+                onClick={() => {
+                  setActiveTab("grading");
+                  setSidebarOpen(false);
+                }}
+              >
+                {sidebarCollapsed ? (
+                  // Use icon instead of text when collapsed
+                  <FaRegCheckCircle className="w-6 h-6 text-purple-900" />
+                ) : (
+                  "Grading"
+                )}
+              </Button>
+              {sidebarCollapsed && (
+                <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Grading
+                </span>
+              )}
+            </div>
+            {/* Sections Button */}
+            <div className="relative group w-full flex justify-center">
+              <Button
+                variant={activeTab === "sections" ? "secondary" : "ghost"}
+                className={`justify-start w-full ${
+                  sidebarCollapsed ? "px-2 py-2" : ""
+                }`}
+                onClick={() => {
+                  setActiveTab("sections");
+                  setSidebarOpen(false);
+                }}
+              >
+                {sidebarCollapsed ? (
+                  // Use icon instead of text when collapsed
+                  <PiUsersThree className="w-6 h-6 text-purple-900" />
+                ) : (
+                  "Sections"
+                )}
+              </Button>
+              {sidebarCollapsed && (
+                <span className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Sections
+                </span>
+              )}
+            </div>
+          </nav>
+        </div>
         {!sidebarCollapsed && (
           <>
-            <div className="mt-8">
-              <h2 className="text-sm font-semibold">Previous Outputs</h2>
-              <ul className="mt-2 space-y-1 text-gray-300">
-                <li className="cursor-pointer hover:text-white">USER STORY.pdf</li>
-                <li className="cursor-pointer hover:text-white">grades 2nd sem.pdf</li>
-                <li className="cursor-pointer hover:text-white">grades 2nd sem.pdf</li>
-              </ul>
-            </div>
             <div className="mt-auto pt-8">
-              <Button variant="ghost" className="p-2 w-full justify-start" onClick={() => setSettingsOpen(true)}>
+              <Button
+                variant="ghost"
+                className="p-2 w-full justify-start"
+                onClick={() => setSettingsOpen(true)}
+              >
                 <Settings className="w-5 h-5 mr-2" />
                 Settings
               </Button>
@@ -489,8 +633,12 @@ export default function Dashboard() {
                 Sulat-Suri: Automatic Essay Grading System
               </h1>
               <div className="flex items-center gap-4">
-                <span>Welcome, Teacher</span>
-                <Button variant="ghost" className="p-2" onClick={() => setSettingsOpen(true)}>
+                <span>Welcome, {fullName || "Teacher"}</span>
+                <Button
+                  variant="ghost"
+                  className="p-2"
+                  onClick={() => setSettingsOpen(true)}
+                >
                   <Settings className="w-5 h-5" />
                 </Button>
               </div>
@@ -500,7 +648,7 @@ export default function Dashboard() {
             <Card className="p-6 mb-6 bg-purple-900 text-white">
               <h2 className="font-semibold mb-2">
                 <IoMdCloudUpload className="inline-block scale-150 mr-3" />
-                Upload Essays (PDF, DOCX, TXT)
+                Upload Essays (PDF)
               </h2>
               <div className="relative w-full">
                 <input
@@ -531,7 +679,7 @@ export default function Dashboard() {
             <Card className="p-6 mb-6 bg-purple-900 text-white">
               <h2 className="font-semibold mb-2">
                 <IoMdCloudUpload className="inline-block scale-150 mr-3" />
-                Upload Reference Answer
+                Upload Reference Answer (PDF)
               </h2>
               <div className="relative w-full">
                 <input
@@ -567,14 +715,18 @@ export default function Dashboard() {
                     type="text"
                     placeholder="Criteria Name"
                     value={rubric.name}
-                    onChange={(e) => handleRubricChange(idx, "name", e.target.value)}
+                    onChange={(e) =>
+                      handleRubricChange(idx, "name", e.target.value)
+                    }
                     className="flex-1 rounded px-2 py-1 text-black"
                   />
                   <input
                     type="text"
                     placeholder="Description"
                     value={rubric.description}
-                    onChange={(e) => handleRubricChange(idx, "description", e.target.value)}
+                    onChange={(e) =>
+                      handleRubricChange(idx, "description", e.target.value)
+                    }
                     className="flex-1 rounded px-2 py-1 text-black"
                   />
                   <Button
@@ -609,49 +761,70 @@ export default function Dashboard() {
               <div className="text-red-400 mt-2">{uploadError}</div>
             )}
             {uploadSuccess && (
-              <div className="text-green-400 mt-2">{uploadSuccess}</div>
+              <div className="text-gray-50 mt-2">{uploadSuccess}</div>
             )}
 
             {/* Results Section */}
             <Card className="p-6 mt-6 bg-purple-900 text-white">
               <h2 className="font-semibold">Grading Results</h2>
               {gradingResults.length === 0 ? (
-                <div className="text-gray-300 mt-4">No grading results yet.</div>
+                <div className="text-gray-300 mt-4">
+                  No grading results yet.
+                </div>
               ) : (
-                gradingResults.map((result) => (
-                  <div key={result.id} className="mb-6">
-                    <table className="w-full mt-4 text-sm">
-                      <thead>
-                        <tr className="text-left border-b border-gray-200">
-                          <th className="py-2">Criterion</th>
-                          <th>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Content</td>
-                          <td>{result.grades.content}</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Understanding</td>
-                          <td>{result.grades.understanding}</td>
-                        </tr>
-                        <tr className="border-b border-gray-200">
-                          <td className="py-2">Organization of Thoughts</td>
-                          <td>{result.grades.organization_of_thoughts}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2 font-bold">Total Grade</td>
-                          <td className="font-bold">{result.grades.total_grade}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="mt-4">
-                      <span className="font-semibold">Explanation:</span>
-                      <p className="mt-1 text-gray-200">{result.grades.explanation}</p>
+                gradingResults.map((result) => {
+                  // Get all criterion keys except explanation and total_grade
+                  const criterionKeys = Object.keys(result.grades).filter(
+                    (key) => key !== "explanation" && key !== "total_grade"
+                  );
+
+                  return (
+                    <div key={result.id} className="mb-6">
+                      {/* Student Info */}
+                      <div className="mb-2">
+                        <span className="font-semibold">Student:</span>{" "}
+                        {studentInfoMap[result.studentId]?.firstName}{" "}
+                        {studentInfoMap[result.studentId]?.lastName}
+                        <span className="ml-4 font-semibold">
+                          Section:
+                        </span>{" "}
+                        {
+                          sectionMap[
+                            studentInfoMap[result.studentId]?.sectionId
+                          ]
+                        }
+                      </div>
+                      <table className="w-full mt-4 text-sm">
+                        <thead>
+                          <tr className="text-left border-b border-gray-200">
+                            <th className="py-2">Criterion</th>
+                            <th>Score</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {criterionKeys.map((key) => (
+                            <tr key={key} className="border-b border-gray-200">
+                              <td className="py-2">{key}</td>
+                              <td>{result.grades[key]}</td>
+                            </tr>
+                          ))}
+                          <tr>
+                            <td className="py-2 font-bold">Total Grade</td>
+                            <td className="font-bold">
+                              {result.grades.total_grade}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="mt-4">
+                        <span className="font-semibold">Explanation:</span>
+                        <p className="mt-1 text-gray-200">
+                          {result.grades.explanation}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </Card>
           </>

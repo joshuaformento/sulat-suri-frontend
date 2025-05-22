@@ -32,9 +32,10 @@ export function LoginForm({
 
       const data = await res.json();
       console.log("LOGIN RESPONSE:", data); // <-- Add this
-      if (!res.ok) throw new Error(data.error || data.message || "Login failed");
+      if (!res.ok)
+        throw new Error(data.error || data.message || "Login failed");
 
-      login(data.user, data.user.token); // This saves user and token to Zustand and localStorage
+      login(data.user.user, data.user.token);
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -96,12 +97,18 @@ export function LoginForm({
               <div className="text-center mt-4 text-sm flex flex-col gap-1">
                 <span>
                   Don't have an account?{" "}
-                  <Link to="/signup" className="text-purple-300 hover:underline">
+                  <Link
+                    to="/signup"
+                    className="text-purple-300 hover:underline"
+                  >
                     Sign up
                   </Link>
                 </span>
                 <span>
-                  <Link to="/verify-email" className="text-purple-300 hover:underline">
+                  <Link
+                    to="/verify-email"
+                    className="text-purple-300 hover:underline"
+                  >
                     Verify your email
                   </Link>
                 </span>
