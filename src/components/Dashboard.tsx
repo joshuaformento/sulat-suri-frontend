@@ -468,6 +468,37 @@ export default function Dashboard() {
                         )
                           return;
                         try {
+                          // 1. Fetch students in this section
+                          const studentsRes = await fetch(
+                            `${
+                              import.meta.env.VITE_API_URL
+                            }/api/v1/student/section/${section.id}`,
+                            {
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          let studentsToDelete: any[] = [];
+                          if (studentsRes.ok) {
+                            const studentsData = await studentsRes.json();
+                            studentsToDelete = Array.isArray(studentsData.data)
+                              ? studentsData.data
+                              : [];
+                          }
+
+                          // 2. Delete each student in the section
+                          for (const student of studentsToDelete) {
+                            await fetch(
+                              `${import.meta.env.VITE_API_URL}/api/v1/student/${
+                                student.id
+                              }`,
+                              {
+                                method: "DELETE",
+                                headers: { Authorization: `Bearer ${token}` },
+                              }
+                            );
+                          }
+
+                          // 3. Delete the section itself
                           const res = await fetch(
                             `${import.meta.env.VITE_API_URL}/api/v1/section/${
                               section.id
@@ -483,11 +514,28 @@ export default function Dashboard() {
                               data.message || "Failed to delete section"
                             );
                           }
+
+                          // 4. Remove section and students from UI state
                           setSections((prev) =>
                             prev.filter((s) => s.id !== section.id)
                           );
                           if (selectedSection?.id === section.id)
                             setSelectedSection(null);
+
+                          // 5. Remove grading results for deleted students
+                          setGradingResults((prev) => {
+                            const deletedStudentIds = studentsToDelete.map(
+                              (s) => s.id
+                            );
+                            const filtered = prev.filter(
+                              (r) => !deletedStudentIds.includes(r.studentId)
+                            );
+                            localStorage.setItem(
+                              "gradingResults",
+                              JSON.stringify(filtered)
+                            );
+                            return filtered;
+                          });
                         } catch (err: any) {
                           alert(err.message);
                         }
