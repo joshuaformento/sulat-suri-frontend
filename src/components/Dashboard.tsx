@@ -145,25 +145,23 @@ export default function Dashboard() {
       if (referenceInputRef.current) referenceInputRef.current.value = ""; // <-- Add this
       setGradingResults((prev) => {
         const newResults = Array.isArray(result) ? result : [result];
-        // Use sectionId from newResults if available, otherwise fallback to studentInfoMap
-        const merged = [
-          ...prev.filter(
-            (old) =>
-              !newResults.some((r) => {
-                const oldSectionId =
-                  old.sectionId || studentInfoMap[old.studentId]?.sectionId;
-                const newSectionId =
-                  r.sectionId || studentInfoMap[r.studentId]?.sectionId;
-                return (
-                  r.studentId === old.studentId &&
-                  oldSectionId &&
-                  newSectionId &&
-                  oldSectionId === newSectionId
-                );
-              })
-          ),
-          ...newResults,
-        ];
+        // Replace any previous result for the same student in the same section
+        const updated = prev.filter((old) => {
+          // Find if this old result is replaced by a new one for the same student and section
+          return !newResults.some((r) => {
+            const oldSectionId =
+              old.sectionId || studentInfoMap[old.studentId]?.sectionId;
+            const newSectionId =
+              r.sectionId || studentInfoMap[r.studentId]?.sectionId;
+            return (
+              r.studentId === old.studentId &&
+              oldSectionId &&
+              newSectionId &&
+              oldSectionId === newSectionId
+            );
+          });
+        });
+        const merged = [...updated, ...newResults];
         localStorage.setItem("gradingResults", JSON.stringify(merged));
         return merged;
       });
