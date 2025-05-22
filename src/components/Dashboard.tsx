@@ -40,6 +40,14 @@ export default function Dashboard() {
     {}
   );
   const [sectionMap, setSectionMap] = useState<{ [id: string]: string }>({});
+    const gradingIds = useAuthStore((state) => state.gradingIds);
+  const gradingStudentIds = useAuthStore((state) => state.gradingStudentIds);
+  const gradingEssayIds = useAuthStore((state) => state.gradingEssayIds);
+  const setGradingIds = useAuthStore((state) => state.setGradingIds);
+  const setGradingStudentIds = useAuthStore((state) => state.setGradingStudentIds);
+  const setGradingEssayIds = useAuthStore((state) => state.setGradingEssayIds);
+  const [editingResult, setEditingResult] = useState<any>(null);
+  const [editGrades, setEditGrades] = useState<any>({});
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -127,8 +135,71 @@ export default function Dashboard() {
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
       setGradingResults(Array.isArray(result) ? result : [result]);
+      localStorage.setItem(
+        "gradingResults",
+        JSON.stringify(Array.isArray(result) ? result : [result])
+      );
+
+      // Save tokens in separate variables
+      const resultsArray = Array.isArray(result) ? result : [result];
+      const ids = resultsArray.map((r) => r.id);
+      const studentIds = resultsArray.map((r) => r.studentId);
+      const essayIds = resultsArray.map((r) => r.essayId);
+
+      setGradingIds(ids);
+      setGradingStudentIds(studentIds);
+      setGradingEssayIds(essayIds);
+
+      // Persist to localStorage
+      localStorage.setItem("gradingIds", JSON.stringify(ids));
+      localStorage.setItem("gradingStudentIds", JSON.stringify(studentIds));
+      localStorage.setItem("gradingEssayIds", JSON.stringify(essayIds));
     } catch (err: any) {
       setUploadError(err.message);
+    }
+  };
+
+  const handleEditClick = (result: any) => {
+    setEditingResult(result);
+    setEditGrades({ ...result.grades });
+  };
+
+  const handleEditChange = (key: string, value: any) => {
+    setEditGrades((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const handleEditSave = async () => {
+    if (!editingResult) return;
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/v1/grades/${editingResult.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(editGrades),
+        }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update grades");
+      }
+      // Update local state and localStorage
+      setGradingResults((prev) =>
+        prev.map((r) =>
+          r.id === editingResult.id ? { ...r, grades: { ...editGrades } } : r
+        )
+      );
+      // Update localStorage
+      const updatedResults = gradingResults.map((r) =>
+        r.id === editingResult.id ? { ...r, grades: { ...editGrades } } : r
+      );
+      localStorage.setItem("gradingResults", JSON.stringify(updatedResults));
+      setEditingResult(null);
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -198,6 +269,46 @@ export default function Dashboard() {
     const [gradesLoading, setGradesLoading] = useState(false);
     const [gradesError, setGradesError] = useState("");
 
+    const [editingGrades, setEditingGrades] = useState<any>(null);
+    const [editGradesData, setEditGradesData] = useState<any>({});
+
+    const handleEditGradesClick = () => {
+      setEditingGrades(studentGrades);
+      setEditGradesData({ ...studentGrades.grades });
+    };
+
+    const handleEditGradesChange = (key: string, value: any) => {
+      setEditGradesData((prev: any) => ({ ...prev, [key]: value }));
+    };
+
+    const handleEditGradesSave = async () => {
+      if (!editingGrades) return;
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/v1/grades/${editingGrades.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(editGradesData),
+          }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "Failed to update grades");
+        }
+        setStudentGrades((prev: any) => ({
+          ...prev,
+          grades: { ...editGradesData },
+        }));
+        setEditingGrades(null);
+      } catch (err: any) {
+        alert(err.message);
+      }
+    };
+
     // Fetch sections
     useEffect(() => {
       setLoading(true);
@@ -258,10 +369,23 @@ export default function Dashboard() {
       setGradesLoading(true);
       setGradesError("");
       setStudentGrades(null);
-
+    
+      // Find the grading result for this student
+      const gradingResult = gradingResults.find(
+        (r) => r.studentId === student.id
+      );
+      const essayId = gradingResult?.essayId;
+      const studentId = gradingResult?.studentId;
+    
+      if (!essayId || !studentId) {
+        setGradesError("No grading result found for this student.");
+        setGradesLoading(false);
+        return;
+      }
+    
       try {
         const res = await fetch(
-          `http://localhost:3000/api/v1/grades/student/${student.id}`,
+          `http://localhost:3000/api/v1/grades/essay/${essayId}/student/${studentId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -271,11 +395,8 @@ export default function Dashboard() {
           throw new Error(data.message || "Failed to fetch grades");
         }
         const data = await res.json();
-        // If you expect only one grade, use data.data[0]
-        setStudentGrades(
-          data.data && data.data.length > 0 ? data.data[0] : null
-        );
-        if (!data.data || data.data.length === 0) {
+        setStudentGrades(data.data || null);
+        if (!data.data) {
           setGradesError("No grades found for this student.");
         }
       } catch (err: any) {
@@ -295,62 +416,58 @@ export default function Dashboard() {
         )}
         {!loading && !error && sections.length > 0 && (
           <ul className="space-y-4">
-            {sections.map((section) => (
-              <li
-                key={section.id}
-                className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${
-                  selectedSection?.id === section.id ? "bg-purple-700" : ""
-                }`}
-                onClick={() => setSelectedSection(section)}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-bold">{section.name}</div>
-                    <div className="text-sm text-gray-300">
-                      Graded Essays: {section.gradedEssayCount ?? "N/A"}
+            {sections.map((section) => {
+              // Count graded essays for this section
+              const gradedCount = essays.filter(
+                (essay) => essay.sectionId === section.id && essay.grades
+              ).length;
+
+              return (
+                <li
+                  key={section.id}
+                  className={`border-b border-purple-700 pb-2 cursor-pointer hover:bg-purple-800 rounded ${
+                    selectedSection?.id === section.id ? "bg-purple-700" : ""
+                  }`}
+                  onClick={() => setSelectedSection(section)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold">{section.name}</div>
+                      <div className="text-sm text-gray-300">
+                        {/* Graded Essays: {gradedCount} */}
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    className="ml-4"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!window.confirm(`Delete section "${section.name}"?`))
-                        return;
-                      try {
-                        const res = await fetch(
-                          `http://localhost:3000/api/v1/section/${section.id}`,
-                          {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }
-                        );
-                        if (!res.ok) {
-                          const data = await res.json().catch(() => ({}));
-                          throw new Error(
-                            data.message || "Failed to delete section"
+                    <Button
+                      variant="destructive"
+                      className="ml-4"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!window.confirm(`Delete section "${section.name}"?`)) return;
+                        try {
+                          const res = await fetch(
+                            `http://localhost:3000/api/v1/section/${section.id}`,
+                            {
+                              method: "DELETE",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
                           );
+                          if (!res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            throw new Error(data.message || "Failed to delete section");
+                          }
+                          setSections((prev) => prev.filter((s) => s.id !== section.id));
+                          if (selectedSection?.id === section.id) setSelectedSection(null);
+                        } catch (err: any) {
+                          alert(err.message);
                         }
-                        setSections((prev) =>
-                          prev.filter((s) => s.id !== section.id)
-                        );
-                        if (selectedSection?.id === section.id)
-                          setSelectedSection(null);
-                      } catch (err: any) {
-                        alert(err.message);
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-                <div className="font-bold">{section.name}</div>
-                <div className="text-sm text-gray-300">
-                  Graded Essays: {section.gradedEssayCount ?? "N/A"}
-                </div>
-                {/* Add more section details as needed */}
-              </li>
-            ))}
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -420,8 +537,6 @@ export default function Dashboard() {
                     >
                       Delete
                     </Button>
-                    className="border-b border-purple-700 pb-1"
-                    {student.firstName} {student.lastName}
                   </li>
                 ))}
               </ul>
@@ -442,29 +557,94 @@ export default function Dashboard() {
                 )}
                 {studentGrades && (
                   <div>
-                    <div className="mb-2">
-                      <span className="font-bold">Grades:</span>
-                      <ul className="ml-4 mt-2">
-                        {Object.entries(studentGrades.grades)
-                          .filter(([key]) => key !== "explanation")
-                          .map(([key, value]) => (
-                            <li key={key}>
-                              <span className="font-semibold capitalize">
-                                {key.replace(/_/g, " ")}:
-                              </span>{" "}
-                              {value}
+                    {editingGrades ? (
+                      <div>
+                        <div className="mb-2">
+                          <span className="font-bold">Grades:</span>
+                          <ul className="ml-4 mt-2">
+                            {Object.entries(editGradesData)
+                              .filter(([key]) => key !== "explanation")
+                              .map(([key, value]) => (
+                                <li key={key}>
+                                  <span className="font-semibold capitalize">
+                                    {key.replace(/_/g, " ")}:
+                                  </span>{" "}
+                                  <input
+                                    type="number"
+                                    value={value}
+                                    onChange={e =>
+                                      handleEditGradesChange(key, Number(e.target.value))
+                                    }
+                                    className="ml-2 rounded px-2 py-1 text-black w-20"
+                                  />
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-bold">Explanation:</span>{" "}
+                          <input
+                            type="text"
+                            value={editGradesData.explanation}
+                            onChange={e =>
+                              handleEditGradesChange("explanation", e.target.value)
+                            }
+                            className="ml-2 rounded px-2 py-1 text-black w-full"
+                          />
+                        </div>
+                        <div>
+                          <span className="font-bold">Essay Title:</span>{" "}
+                          {studentGrades.essay?.title}
+                        </div>
+                        <button
+                          className="mr-2 bg-green-600 px-3 py-1 rounded mt-2"
+                          onClick={handleEditGradesSave}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="bg-gray-400 px-3 py-1 rounded mt-2"
+                          onClick={() => setEditingGrades(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-2">
+                          <span className="font-bold">Grades:</span>
+                          <ul className="ml-4 mt-2">
+                            {Object.entries(studentGrades.grades)
+                              .filter(([key]) => key !== "explanation" && key !== "total_grade")
+                              .map(([key, value]) => (
+                                <li key={key}>
+                                  <span className="font-semibold capitalize">
+                                    {key.replace(/_/g, " ")}:
+                                  </span>{" "}
+                                  {value}
+                                </li>
+                              ))}
+                            <li>
+                              <span className="font-semibold">Total Grade:</span> {studentGrades.grades.total_grade}
                             </li>
-                          ))}
-                      </ul>
-                    </div>
-                    <div className="mb-2">
-                      <span className="font-bold">Explanation:</span>{" "}
-                      {studentGrades.grades?.explanation}
-                    </div>
-                    <div>
-                      <span className="font-bold">Essay Title:</span>{" "}
-                      {studentGrades.essay?.title}
-                    </div>
+                          </ul>
+                        </div>
+                        <div className="mb-2">
+                          <span className="font-bold">Explanation:</span>{" "}
+                          {studentGrades.grades?.explanation}
+                        </div>
+                        <div>
+                          <span className="font-bold">Essay Title:</span>{" "}
+                          {studentGrades.essay?.title}
+                        </div>
+                        <button
+                          className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded"
+                          onClick={handleEditGradesClick}
+                        >
+                          Edit Grades
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -473,10 +653,7 @@ export default function Dashboard() {
         )}
       </Card>
     );
-
-    // eslint-disable-next-line
   };
-
   useEffect(() => {
     // Fetch student info for each grading result
     const fetchStudentInfo = async () => {
@@ -506,7 +683,6 @@ export default function Dashboard() {
     if (gradingResults.length > 0) fetchStudentInfo();
     // eslint-disable-next-line
   }, [gradingResults, token]);
-
   useEffect(() => {
     const fetchSections = async () => {
       try {
@@ -525,6 +701,20 @@ export default function Dashboard() {
     };
     fetchSections();
   }, [token]);
+  useEffect(() => {
+    const ids = localStorage.getItem("gradingIds");
+    const studentIds = localStorage.getItem("gradingStudentIds");
+    const essayIds = localStorage.getItem("gradingEssayIds");
+    if (ids) setGradingIds(JSON.parse(ids));
+    if (studentIds) setGradingStudentIds(JSON.parse(studentIds));
+    if (essayIds) setGradingEssayIds(JSON.parse(essayIds));
+  }, []);
+  useEffect(() => {
+    const saved = localStorage.getItem("gradingResults");
+    if (saved) {
+      setGradingResults(JSON.parse(saved));
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === "grading") {
@@ -560,10 +750,9 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <aside
-        className={`
-          fixed z-40 top-0 left-0 h-full ${
-            sidebarCollapsed ? "w-20" : "w-64"
-          } p-6 bg-purple-600 flex flex-col transition-all duration-200
+        className={`${
+          sidebarCollapsed ? "w-20" : "w-64"
+        } p-6 bg-purple-600 flex flex-col transition-all duration-200
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:relative md:translate-x-0 md:flex
         `}
@@ -653,8 +842,6 @@ export default function Dashboard() {
           </>
         )}
       </aside>
-
-      {/* Overlay for mobile sidebar */}
       {!sidebarCollapsed && sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black bg-opacity-40 md:hidden"
@@ -832,34 +1019,91 @@ export default function Dashboard() {
                           ]
                         }
                       </div>
-                      <table className="w-full mt-4 text-sm">
-                        <thead>
-                          <tr className="text-left border-b border-gray-200">
-                            <th className="py-2">Criterion</th>
-                            <th>Score</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+                      {editingResult?.id === result.id ? (
+                        <div>
                           {criterionKeys.map((key) => (
-                            <tr key={key} className="border-b border-gray-200">
-                              <td className="py-2">{key}</td>
-                              <td>{result.grades[key]}</td>
-                            </tr>
+                            <div key={key} className="mb-2">
+                              <label className="font-semibold capitalize">
+                                {key.replace(/_/g, " ")}:
+                              </label>
+                              <input
+                                type="number"
+                                value={editGrades[key]}
+                                onChange={(e) =>
+                                  handleEditChange(key, Number(e.target.value))
+                                }
+                                className="ml-2 rounded px-2 py-1 text-black w-20"
+                              />
+                            </div>
                           ))}
-                          <tr>
-                            <td className="py-2 font-bold">Total Grade</td>
-                            <td className="font-bold">
-                              {result.grades.total_grade}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div className="mt-4">
-                        <span className="font-semibold">Explanation:</span>
-                        <p className="mt-1 text-gray-200">
-                          {result.grades.explanation}
-                        </p>
-                      </div>
+                          <div className="mb-2">
+                            <label className="font-semibold">Explanation:</label>
+                            <input
+                              type="text"
+                              value={editGrades.explanation}
+                              onChange={(e) =>
+                                handleEditChange("explanation", e.target.value)
+                              }
+                              className="ml-2 rounded px-2 py-1 text-black w-full"
+                            />
+                          </div>
+                          <button
+                            className="mr-2 bg-green-600 px-3 py-1 rounded"
+                            onClick={handleEditSave}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="bg-gray-400 px-3 py-1 rounded"
+                            onClick={() => setEditingResult(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <table className="w-full mt-4 text-sm">
+                            <thead>
+                              <tr className="text-left border-b border-gray-200">
+                                <th className="py-2">Criterion</th>
+                                <th>Score</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {criterionKeys.map((key) => (
+                                <tr
+                                  key={key}
+                                  className="border-b border-gray-200"
+                                >
+                                  <td className="py-2">{key}</td>
+                                  <td>{result.grades[key]}</td>
+                                </tr>
+                              ))}
+                              <tr>
+                                <td className="py-2 font-bold">Total Grade</td>
+                                <td className="font-bold">
+                                  {result.grades.total_grade}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div className="mt-4">
+                            <span className="font-semibold">Explanation:</span>
+                            <p className="mt-1 text-gray-200">
+                              {result.grades.explanation}
+                            </p>
+                          </div>
+                          {/* Remove or comment out the Edit Grades button below */}
+                          {/* 
+                          <button
+                            className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded"
+                            onClick={() => handleEditClick(result)}
+                          >
+                            Edit Grades
+                          </button>
+                          */}
+                        </>
+                      )}
                     </div>
                   );
                 })

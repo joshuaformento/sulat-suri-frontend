@@ -10,6 +10,12 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  gradingIds: string[];
+  gradingStudentIds: string[];
+  gradingEssayIds: string[];
+  setGradingIds: (ids: string[]) => void;
+  setGradingStudentIds: (ids: string[]) => void;
+  setGradingEssayIds: (ids: string[]) => void;
   login: (user: User, token: string) => void;
   logout: () => void;
   loadFromStorage: () => void;
@@ -20,19 +26,28 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-
+      gradingIds: [],
+      gradingStudentIds: [],
+      gradingEssayIds: [],
+      setGradingIds: (ids) => set({ gradingIds: ids }),
+      setGradingStudentIds: (ids) => set({ gradingStudentIds: ids }),
+      setGradingEssayIds: (ids) => set({ gradingEssayIds: ids }),
       login: (user, token) => {
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
         set({ user, token });
       },
-
       logout: () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        set({ user: null, token: null });
+        set({
+          user: null,
+          token: null,
+          gradingIds: [],
+          gradingStudentIds: [],
+          gradingEssayIds: [],
+        });
       },
-
       loadFromStorage: () => {
         const token = localStorage.getItem("token");
         const userStr = localStorage.getItem("user");
