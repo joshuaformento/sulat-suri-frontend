@@ -24,12 +24,37 @@ export default function HelpFAQ() {
           <li>
             <strong>How do I upload essays?</strong>
             <br />
-            Go to the Dashboard, click "Upload Essays", and select your files.
+            Go to the Dashboard, select the "Grading" tab, click "Upload Essays", and select your files. You can upload multiple essays at once.
           </li>
           <li>
-            <strong>How do I add grading criteria?</strong>
+            <strong>How do I upload a reference file?</strong>
             <br />
-            Use the "Add Another Criteria" button and fill in the fields.
+            In the "Grading" tab, use the "Upload Reference" button to upload a reference document for comparison.
+          </li>
+          <li>
+            <strong>How do I add or edit grading criteria?</strong>
+            <br />
+            Use the "Add Another Criteria" button to add new criteria. You can edit or remove criteria before grading.
+          </li>
+          <li>
+            <strong>How do I view and edit grades?</strong>
+            <br />
+            In the "Grading" tab, you can view all grading results. Editing grades is available in the "Sections" tab: select a section, click a student, and use the "Edit Grades" button.
+          </li>
+          <li>
+            <strong>How do I manage sections and students?</strong>
+            <br />
+            Go to the "Sections" tab to view all sections and their students. You can delete sections or students using the "Delete" button.
+          </li>
+          <li>
+            <strong>How do I see how many essays are graded in a section?</strong>
+            <br />
+            In the "Sections" tab, select a section to see the list of students and their graded essays.
+          </li>
+          <li>
+            <strong>How do I log out?</strong>
+            <br />
+            Click the "Settings" button at the bottom left and choose "Log Out".
           </li>
           <li>
             <strong>Who can I contact for support?</strong>
