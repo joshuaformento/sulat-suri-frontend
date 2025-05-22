@@ -1188,41 +1188,37 @@ export default function Dashboard() {
             {/* Results Section */}
             <Card className="p-6 mt-6 bg-purple-900 text-white">
               <h2 className="font-semibold">Grading Results</h2>
-              {/* Option 2: Only render grading results after sectionMap is loaded */}
-              {Object.keys(sectionMap).length === 0 ||
-              gradingResults.some((r) => !studentInfoMap[r.studentId]) ? (
-                <div className="text-gray-300 mt-4">Loading...</div>
-              ) : gradingResults.length === 0 ? (
+              {gradingResults.length === 0 ? (
                 <div className="text-gray-300 mt-4">
                   No grading results yet.
                 </div>
-              ) : // Only render when all student info and section names are loaded
-              gradingResults.every(
-                  (r) =>
-                    studentInfoMap[r.studentId]?.sectionId &&
-                    sectionMap[studentInfoMap[r.studentId]?.sectionId]
-                ) ? (
+              ) : (
                 gradingResults.map((result) => {
-                  // Get all criterion keys except explanation and total_grade
+                  const student = studentInfoMap[result.studentId];
+                  const sectionId = student?.sectionId;
+                  const sectionName = sectionId ? sectionMap[sectionId] : null;
                   const criterionKeys = Object.keys(result.grades).filter(
                     (key) => key !== "explanation" && key !== "total_grade"
                   );
+
+                  if (!student || !sectionName) {
+                    return (
+                      <div key={result.id} className="mb-6 text-gray-300">
+                        Loading...
+                      </div>
+                    );
+                  }
 
                   return (
                     <div key={result.id} className="mb-6">
                       {/* Student Info */}
                       <div className="mb-2">
                         <span className="font-semibold">Student:</span>{" "}
-                        {studentInfoMap[result.studentId]?.firstName}{" "}
-                        {studentInfoMap[result.studentId]?.lastName}
+                        {student.firstName} {student.lastName}
                         <span className="ml-4 font-semibold">
                           Section:
                         </span>{" "}
-                        {studentInfoMap[result.studentId]?.sectionId
-                          ? sectionMap[
-                              studentInfoMap[result.studentId].sectionId
-                            ] || "Loading..."
-                          : "Loading..."}
+                        {sectionName}
                       </div>
                       {editingResult?.id === result.id ? (
                         <div>
@@ -1300,22 +1296,11 @@ export default function Dashboard() {
                               {result.grades.explanation}
                             </p>
                           </div>
-                          {/* Remove or comment out the Edit Grades button below */}
-                          {/* 
-                            <button
-                              className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded"
-                              onClick={() => handleEditClick(result)}
-                            >
-                              Edit Grades
-                            </button>
-                            */}
                         </>
                       )}
                     </div>
                   );
                 })
-              ) : (
-                <div className="text-gray-300 mt-4">Loading...</div>
               )}
             </Card>
           </>
