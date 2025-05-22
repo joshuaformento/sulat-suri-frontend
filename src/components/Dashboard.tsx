@@ -308,6 +308,51 @@ export default function Dashboard() {
       setEditGradesData((prev: any) => ({ ...prev, [key]: value }));
     };
 
+    // Handle student click
+    const handleStudentClick = async (student: any) => {
+      setSelectedStudent(student);
+      setGradesLoading(true);
+      setGradesError("");
+      setStudentGrades(null);
+
+      // Always use the latest gradingResults prop
+      const gradingResult = gradingResults.find(
+        (r) => r.studentId === student.id
+      );
+      const essayId = gradingResult?.essayId;
+      const studentId = gradingResult?.studentId;
+
+      if (!essayId || !studentId) {
+        setGradesError("No grading result found for this student.");
+        setGradesLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${
+            import.meta.env.VITE_API_URL
+          }/api/v1/grades/essay/${essayId}/student/${studentId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "Failed to fetch grades");
+        }
+        const data = await res.json();
+        setStudentGrades(data.data || null);
+        if (!data.data) {
+          setGradesError("No grades found for this student.");
+        }
+      } catch (err: any) {
+        setGradesError(err.message);
+      } finally {
+        setGradesLoading(false);
+      }
+    };
+
     const handleEditGradesSave = async () => {
       if (!editingGrades) return;
       try {
@@ -335,6 +380,12 @@ export default function Dashboard() {
         alert(err.message);
       }
     };
+
+    useEffect(() => {
+      setSelectedStudent(null);
+      setStudentGrades(null);
+      setGradesError("");
+    }, [gradingResults]);
 
     // Fetch sections
     useEffect(() => {
