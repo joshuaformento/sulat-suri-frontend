@@ -17,10 +17,12 @@ export default function AboutUs() {
         <p className="mt-4">
           For more information, contact us at{" "}
           <a
-            href="mailto:info@example.com"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=sulatsuri@gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-purple-700 underline"
           >
-            info@example.com
+            sulatsuri@gmail.com
           </a>
         </p>
       </Card>
