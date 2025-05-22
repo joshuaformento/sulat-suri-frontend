@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function SignupForm({
   className,
@@ -16,6 +16,10 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Sulat-Suri | Sign up";
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// Update the path below if your auth store is in a different location
 import { useAuthStore } from "../store/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,10 @@ export function LoginForm({
   const [error, setError] = useState("");
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Welcome to Sulat-Suri!";
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +75,6 @@ export function LoginForm({
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
                 </div>
                 <Input
                   id="password"
@@ -99,7 +96,7 @@ export function LoginForm({
                   Don't have an account?{" "}
                   <Link
                     to="/signup"
-                    className="text-purple-300 hover:underline"
+                    className="text-purple-900 hover:underline"
                   >
                     Sign up
                   </Link>
@@ -107,7 +104,7 @@ export function LoginForm({
                 <span>
                   <Link
                     to="/verify-email"
-                    className="text-purple-300 hover:underline"
+                    className="text-purple-900 hover:underline"
                   >
                     Verify your email
                   </Link>
