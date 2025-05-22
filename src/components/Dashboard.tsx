@@ -1196,7 +1196,7 @@ export default function Dashboard() {
                 <div className="text-gray-300 mt-4">
                   No grading results yet.
                 </div>
-              ) : // Wait until all studentInfoMap and sectionMap are loaded for all results
+              ) : // Only render when all student info and section names are loaded
               gradingResults.every(
                   (r) =>
                     studentInfoMap[r.studentId]?.sectionId &&
