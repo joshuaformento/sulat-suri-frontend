@@ -143,7 +143,16 @@ export default function Dashboard() {
       setRubrics([{ name: "", description: "" }]);
       if (essayInputRef.current) essayInputRef.current.value = ""; // <-- Add this
       if (referenceInputRef.current) referenceInputRef.current.value = ""; // <-- Add this
-      setGradingResults(Array.isArray(result) ? result : [result]);
+      setGradingResults((prev) => {
+        const newResults = Array.isArray(result) ? result : [result];
+        // Remove duplicates by id
+        const merged = [
+          ...prev.filter((old) => !newResults.some((r) => r.id === old.id)),
+          ...newResults,
+        ];
+        localStorage.setItem("gradingResults", JSON.stringify(merged));
+        return merged;
+      });
       localStorage.setItem(
         "gradingResults",
         JSON.stringify(Array.isArray(result) ? result : [result])
