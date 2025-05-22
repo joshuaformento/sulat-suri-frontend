@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [editGrades, setEditGrades] = useState<any>({});
   const [gradingLoading, setGradingLoading] = useState(false); // <-- Add this state
   const essayInputRef = useRef<HTMLInputElement>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null); // <-- Add this
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -141,6 +142,7 @@ export default function Dashboard() {
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
       if (essayInputRef.current) essayInputRef.current.value = ""; // <-- Add this
+      if (referenceInputRef.current) referenceInputRef.current.value = ""; // <-- Add this
       setGradingResults(Array.isArray(result) ? result : [result]);
       localStorage.setItem(
         "gradingResults",
@@ -945,6 +947,7 @@ export default function Dashboard() {
                 <input
                   type="file"
                   id="reference-upload"
+                  ref={referenceInputRef} // <-- Attach the ref
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   accept=".pdf,.docx,.txt"
                   onChange={handleReferenceFileChange}
