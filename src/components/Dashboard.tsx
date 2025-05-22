@@ -145,16 +145,22 @@ export default function Dashboard() {
       if (referenceInputRef.current) referenceInputRef.current.value = ""; // <-- Add this
       setGradingResults((prev) => {
         const newResults = Array.isArray(result) ? result : [result];
-        // Remove previous results for the same student in the same section
+        // Use sectionId from newResults if available, otherwise fallback to studentInfoMap
         const merged = [
           ...prev.filter(
             (old) =>
-              !newResults.some(
-                (r) =>
+              !newResults.some((r) => {
+                const oldSectionId =
+                  old.sectionId || studentInfoMap[old.studentId]?.sectionId;
+                const newSectionId =
+                  r.sectionId || studentInfoMap[r.studentId]?.sectionId;
+                return (
                   r.studentId === old.studentId &&
-                  studentInfoMap[old.studentId]?.sectionId ===
-                    studentInfoMap[r.studentId]?.sectionId
-              )
+                  oldSectionId &&
+                  newSectionId &&
+                  oldSectionId === newSectionId
+                );
+              })
           ),
           ...newResults,
         ];
