@@ -107,7 +107,7 @@ export default function Dashboard() {
       return;
     }
 
-    setGradingLoading(true); // <-- Start loading
+    setGradingLoading(true);
 
     // Convert rubrics array to object
     const rubricObj = Object.fromEntries(
@@ -117,7 +117,7 @@ export default function Dashboard() {
     const formData = new FormData();
     essayFiles.forEach((file) => formData.append("essays", file));
     formData.append("reference", referenceFile);
-    formData.append("rubrics", JSON.stringify(rubricObj)); // <-- send as object
+    formData.append("rubrics", JSON.stringify(rubricObj));
 
     try {
       const res = await fetch(
@@ -141,13 +141,21 @@ export default function Dashboard() {
       setEssayFiles([]);
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
-      if (essayInputRef.current) essayInputRef.current.value = ""; // <-- Add this
-      if (referenceInputRef.current) referenceInputRef.current.value = ""; // <-- Add this
+      if (essayInputRef.current) essayInputRef.current.value = "";
+      if (referenceInputRef.current) referenceInputRef.current.value = "";
+
+      // --- Fetch missing student and section info before updating gradingResults ---
+      const newResults = Array.isArray(result) ? result : [result];
+      await fetchMissingStudentAndSectionInfo(
+        newResults,
+        studentInfoMap,
+        token,
+        setStudentInfoMap,
+        setSectionMap
+      );
+
       setGradingResults((prev) => {
-        const newResults = Array.isArray(result) ? result : [result];
-        // Replace any previous result for the same student in the same section
         const updated = prev.filter((old) => {
-          // Find if this old result is replaced by a new one for the same student and section
           return !newResults.some((r) => {
             const oldSectionId =
               old.sectionId || studentInfoMap[old.studentId]?.sectionId;
@@ -180,14 +188,13 @@ export default function Dashboard() {
       setGradingStudentIds(studentIds);
       setGradingEssayIds(essayIds);
 
-      // Persist to localStorage
       localStorage.setItem("gradingIds", JSON.stringify(ids));
       localStorage.setItem("gradingStudentIds", JSON.stringify(studentIds));
       localStorage.setItem("gradingEssayIds", JSON.stringify(essayIds));
     } catch (err: any) {
       setUploadError(err.message);
     } finally {
-      setGradingLoading(false); // <-- Stop loading
+      setGradingLoading(false);
     }
   };
 
@@ -887,6 +894,64 @@ export default function Dashboard() {
       map.set(key, r);
     }
     return Array.from(map.values());
+  }
+
+  // Helper to fetch missing student info and section info
+  async function fetchMissingStudentAndSectionInfo(
+    newResults: any[],
+    studentInfoMap: any,
+    token: string,
+    setStudentInfoMap: any,
+    setSectionMap: any
+  ) {
+    // Find missing studentIds
+    const missingStudentIds = newResults
+      .map((r) => r.studentId)
+      .filter((id) => id && !studentInfoMap[id]);
+    const newStudentInfo: any = {};
+    const newSectionIds = new Set<string>();
+
+    await Promise.all(
+      missingStudentIds.map(async (id) => {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/v1/student/${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            newStudentInfo[id] = data.data;
+            if (data.data?.sectionId) {
+              newSectionIds.add(data.data.sectionId);
+            }
+          }
+        } catch {}
+      })
+    );
+
+    if (Object.keys(newStudentInfo).length > 0) {
+      setStudentInfoMap((prev: any) => ({ ...prev, ...newStudentInfo }));
+    }
+
+    // Fetch missing section names
+    if (newSectionIds.size > 0) {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/section`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const map: { [id: string]: string } = {};
+          (Array.isArray(data.data) ? data.data : []).forEach(
+            (section: any) => {
+              map[section.id] = section.name;
+            }
+          );
+          setSectionMap((prev: any) => ({ ...prev, ...map }));
+        }
+      } catch {}
+    }
   }
 
   return (
