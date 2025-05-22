@@ -269,6 +269,21 @@ export default function Dashboard() {
     </div>
   );
 
+  function getLatestGradesByStudent(gradingResults: any[]) {
+    // If no timestamp, fallback to last in array
+    const map: { [studentId: string]: any } = {};
+    gradingResults.forEach((result) => {
+      const prev = map[result.studentId];
+      // Prefer updatedAt, then createdAt, else fallback to last
+      const prevTime = prev?.updatedAt || prev?.createdAt || 0;
+      const currTime = result.updatedAt || result.createdAt || 0;
+      if (!prev || currTime > prevTime) {
+        map[result.studentId] = result;
+      }
+    });
+    return Object.values(map);
+  }
+
   // Placeholder components for other tabs
   const SectionsTab = ({ gradingResults }: { gradingResults: any[] }) => {
     const [sections, setSections] = useState<any[]>([]);
@@ -349,7 +364,7 @@ export default function Dashboard() {
         if (!gradingResults.length) return;
         // Get all unique studentIds from gradingResults
         const studentIds = Array.from(
-          new Set(gradingResults.map((r) => r.studentId))
+          new Set(latestGradingResults.map((r) => r.studentId))
         );
         // Check which students still exist
         const stillExists: Record<string, boolean> = {};
@@ -388,6 +403,10 @@ export default function Dashboard() {
         })
         .then((data) => setEssays(Array.isArray(data) ? data : []));
     }, [token]);
+
+    // Only keep the latest grade per student
+    const latestGradingResults = getLatestGradesByStudent(gradingResults);
+    // Use latestGradingResults instead of gradingResults below
 
     // Fetch students when a section is selected
     useEffect(() => {
@@ -429,7 +448,7 @@ export default function Dashboard() {
       setStudentGrades(null);
 
       // Find the grading result for this student
-      const gradingResult = gradingResults.find(
+      const gradingResult = latestGradingResults.find(
         (r) => r.studentId === student.id
       );
       const essayId = gradingResult?.essayId;
