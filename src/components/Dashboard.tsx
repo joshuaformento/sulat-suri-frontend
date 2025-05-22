@@ -1196,7 +1196,12 @@ export default function Dashboard() {
                 <div className="text-gray-300 mt-4">
                   No grading results yet.
                 </div>
-              ) : (
+              ) : // Wait until all studentInfoMap and sectionMap are loaded for all results
+              gradingResults.every(
+                  (r) =>
+                    studentInfoMap[r.studentId]?.sectionId &&
+                    sectionMap[studentInfoMap[r.studentId]?.sectionId]
+                ) ? (
                 gradingResults.map((result) => {
                   // Get all criterion keys except explanation and total_grade
                   const criterionKeys = Object.keys(result.grades).filter(
@@ -1297,18 +1302,20 @@ export default function Dashboard() {
                           </div>
                           {/* Remove or comment out the Edit Grades button below */}
                           {/* 
-                          <button
-                            className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded"
-                            onClick={() => handleEditClick(result)}
-                          >
-                            Edit Grades
-                          </button>
-                          */}
+                            <button
+                              className="mt-2 bg-yellow-400 text-black px-3 py-1 rounded"
+                              onClick={() => handleEditClick(result)}
+                            >
+                              Edit Grades
+                            </button>
+                            */}
                         </>
                       )}
                     </div>
                   );
                 })
+              ) : (
+                <div className="text-gray-300 mt-4">Loading...</div>
               )}
             </Card>
           </>
