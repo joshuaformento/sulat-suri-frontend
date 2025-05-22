@@ -786,7 +786,7 @@ export default function Dashboard() {
         {!sidebarCollapsed && (
           <h1 className="text-xl font-bold mt-11">
             <img
-              src="../public/assets/images/logo.png"
+              src="/assets/images/logo.png"
               className="pb-3 w-24 justify-center text-center inline-block pr-4"
               alt="Sulat-Suri Logo"
             />
