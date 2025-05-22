@@ -27,11 +27,14 @@ export function LoginForm({
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3000/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await res.json();
       console.log("LOGIN RESPONSE:", data); // <-- Add this
@@ -114,7 +117,7 @@ export function LoginForm({
           </form>
           <div className="relative hidden md:flex md:flex-col-reverse -inset-x-5">
             <img
-              src="./src/assets/images/logo.png"
+              src="/assets/images/logo.png"
               alt="Image"
               className="absolute inset-0 object-cover dark:brightness-[0.2] dark:grayscale md:scale-90 -inset-y-2"
             />

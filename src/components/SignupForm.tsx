@@ -31,33 +31,41 @@ export function SignupForm({
       return;
     }
 
-   try {
-  const response = await fetch("http://localhost:3000/api/v1/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fullName: name, email, password, confirmPassword }),
-  });
-
-  if (response.status === 409) {
-    const data = await response.json();
-    throw new Error(data.message || "User already exists.");
-  } else if (!response.ok) {
-    // Try to parse error message, but handle empty body
-    let errorMsg = "Signup failed";
     try {
-      const data = await response.json();
-      errorMsg = data.message || errorMsg;
-    } catch {
-      // Ignore if response is not JSON
-    }
-    throw new Error(errorMsg);
-  }
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: name,
+            email,
+            password,
+            confirmPassword,
+          }),
+        }
+      );
 
-  setSuccess(true);
-  setError(null);
-} catch (err: any) {
-  setError(err.message);
-}
+      if (response.status === 409) {
+        const data = await response.json();
+        throw new Error(data.message || "User already exists.");
+      } else if (!response.ok) {
+        // Try to parse error message, but handle empty body
+        let errorMsg = "Signup failed";
+        try {
+          const data = await response.json();
+          errorMsg = data.message || errorMsg;
+        } catch {
+          // Ignore if response is not JSON
+        }
+        throw new Error(errorMsg);
+      }
+
+      setSuccess(true);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -131,7 +139,8 @@ export function SignupForm({
 
               {success && (
                 <p className="text-sm text-green-600 text-center">
-                  Signup successful! Please check your email to verify your account.
+                  Signup successful! Please check your email to verify your
+                  account.
                 </p>
               )}
 

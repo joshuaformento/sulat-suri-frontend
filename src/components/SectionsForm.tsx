@@ -25,9 +25,12 @@ export default function SectionsForm() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("http://localhost:3000/api/v1/section", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/section`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (!res.ok) throw new Error("Failed to fetch sections");
         const data = await res.json();
         setSections(data);
@@ -59,11 +62,14 @@ export default function SectionsForm() {
                 {section.students && section.students.length > 0 ? (
                   section.students.map((student) => (
                     <li key={student.id} className="py-1">
-                      {student.name} <span className="text-gray-300">({student.email})</span>
+                      {student.name}{" "}
+                      <span className="text-gray-300">({student.email})</span>
                     </li>
                   ))
                 ) : (
-                  <li className="text-gray-400">No students in this section.</li>
+                  <li className="text-gray-400">
+                    No students in this section.
+                  </li>
                 )}
               </ul>
             </details>
