@@ -192,14 +192,18 @@ export default function Dashboard() {
     const [students, setStudents] = useState<any[]>([]);
     const [studentsLoading, setStudentsLoading] = useState(false);
     const [studentsError, setStudentsError] = useState("");
-
+    const [essays, setEssays] = useState<any[]>([]);
+    const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const [studentGrades, setStudentGrades] = useState<any>(null);
+    const [gradesLoading, setGradesLoading] = useState(false);
+    const [gradesError, setGradesError] = useState("");
+    
+    // Fetch sections
     useEffect(() => {
       setLoading(true);
       setError("");
       fetch("http://localhost:3000/api/v1/section", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
         .then(async (res) => {
           if (!res.ok) {
@@ -213,6 +217,71 @@ export default function Dashboard() {
         .finally(() => setLoading(false));
     }, [token]);
 
+
+    // Fetch essays (for mapping student to essayId)
+    useEffect(() => {
+      fetch("http://localhost:3000/api/v1/essays/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (!res.ok) return [];
+          return res.json();
+        })
+        .then((data) => setEssays(Array.isArray(data) ? data : []));
+    }, [token]);
+
+    // Fetch students when a section is selected
+    useEffect(() => {
+      if (!selectedSection) return;
+      setStudentsLoading(true);
+      setStudentsError("");
+      fetch(`http://localhost:3000/api/v1/student/section/${selectedSection.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || "Failed to fetch students");
+          }
+          return res.json();
+        })
+        .then((data) => setStudents(Array.isArray(data.data) ? data.data : []))
+        .catch((err) => setStudentsError(err.message))
+        .finally(() => setStudentsLoading(false));
+    }, [selectedSection, token]);
+
+    // Handle student click
+    const handleStudentClick = async (student: any) => {
+      setSelectedStudent(student);
+      setGradesLoading(true);
+      setGradesError("");
+      setStudentGrades(null);
+    
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/v1/grades/student/${student.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "Failed to fetch grades");
+        }
+        const data = await res.json();
+        // If you expect only one grade, use data.data[0]
+        setStudentGrades(data.data && data.data.length > 0 ? data.data[0] : null);
+        if (!data.data || data.data.length === 0) {
+          setGradesError("No grades found for this student.");
+        }
+      } catch (err: any) {
+        setGradesError(err.message);
+      } finally {
+        setGradesLoading(false);
+      }
+    };
+
+=======
     return (
       <Card className="p-6 mt-6 bg-purple-900 text-white">
         <h2 className="font-semibold text-xl mb-4">Graded Sections</h2>
@@ -231,11 +300,44 @@ export default function Dashboard() {
                 }`}
                 onClick={() => setSelectedSection(section)}
               >
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold">{section.name}</div>
+                    <div className="text-sm text-gray-300">Graded Essays: {section.gradedEssayCount ?? "N/A"}</div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    className="ml-4"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!window.confirm(`Delete section "${section.name}"?`)) return;
+                      try {
+                        const res = await fetch(`http://localhost:3000/api/v1/section/${section.id}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!res.ok) {
+                          const data = await res.json().catch(() => ({}));
+                          throw new Error(data.message || "Failed to delete section");
+                        }
+                        setSections((prev) => prev.filter((s) => s.id !== section.id));
+                        if (selectedSection?.id === section.id) setSelectedSection(null);
+                      } catch (err: any) {
+                        alert(err.message);
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+=======
                 <div className="font-bold">{section.name}</div>
                 <div className="text-sm text-gray-300">
                   Graded Essays: {section.gradedEssayCount ?? "N/A"}
                 </div>
                 {/* Add more section details as needed */}
+
               </li>
             ))}
           </ul>
@@ -263,12 +365,79 @@ export default function Dashboard() {
                 {students.map((student) => (
                   <li
                     key={student.id}
+
+                    className="border-b border-purple-700 pb-1 flex items-center justify-between hover:bg-purple-800 cursor-pointer"
+                    onClick={() => handleStudentClick(student)}
+                  >
+                    <span>
+                      {student.firstName} {student.lastName}
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="ml-2"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!window.confirm(`Delete student "${student.firstName} ${student.lastName}"?`)) return;
+                        try {
+                          const res = await fetch(`http://localhost:3000/api/v1/student/${student.id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          });
+                          if (!res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            throw new Error(data.message || "Failed to delete student");
+                          }
+                          setStudents((prev) => prev.filter((s) => s.id !== student.id));
+                          if (selectedStudent?.id === student.id) setSelectedStudent(null);
+                        } catch (err: any) {
+                          alert(err.message);
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+=======
                     className="border-b border-purple-700 pb-1"
                   >
                     {student.firstName} {student.lastName}
+
                   </li>
                 ))}
               </ul>
+            )}
+
+            {/* Student Grades */}
+            {selectedStudent && (
+              <div className="mt-4 p-4 bg-purple-800 rounded">
+                <h4 className="font-semibold mb-2">
+                  Grades for {selectedStudent.firstName} {selectedStudent.lastName}
+                </h4>
+                {gradesLoading && <div className="text-gray-300">Loading grades...</div>}
+                {gradesError && <div className="text-red-400">{gradesError}</div>}
+                {studentGrades && (
+                  <div>
+                    <div className="mb-2">
+                      <span className="font-bold">Grades:</span>
+                      <ul className="ml-4 mt-2">
+                        {Object.entries(studentGrades.grades)
+                          .filter(([key]) => key !== "explanation")
+                          .map(([key, value]) => (
+                            <li key={key}>
+                              <span className="font-semibold capitalize">{key.replace(/_/g, " ")}:</span> {value}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                    <div className="mb-2">
+                      <span className="font-bold">Explanation:</span> {studentGrades.grades?.explanation}
+                    </div>
+                    <div>
+                      <span className="font-bold">Essay Title:</span> {studentGrades.essay?.title}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
