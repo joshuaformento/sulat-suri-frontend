@@ -47,6 +47,7 @@ export default function Dashboard() {
   const setGradingEssayIds = useAuthStore((state) => state.setGradingEssayIds);
   const [editingResult, setEditingResult] = useState<any>(null);
   const [editGrades, setEditGrades] = useState<any>({});
+  const [gradingLoading, setGradingLoading] = useState(false); // <-- Add this state
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -104,6 +105,8 @@ export default function Dashboard() {
       return;
     }
 
+    setGradingLoading(true); // <-- Start loading
+
     // Convert rubrics array to object
     const rubricObj = Object.fromEntries(
       rubrics.map((r) => [r.name.trim(), r.description.trim()])
@@ -158,6 +161,8 @@ export default function Dashboard() {
       localStorage.setItem("gradingEssayIds", JSON.stringify(essayIds));
     } catch (err: any) {
       setUploadError(err.message);
+    } finally {
+      setGradingLoading(false); // <-- Stop loading
     }
   };
 
@@ -717,9 +722,11 @@ export default function Dashboard() {
         if (res.ok) {
           const data = await res.json();
           const map: { [id: string]: string } = {};
-          (Array.isArray(data) ? data : data.data).forEach((section: any) => {
-            map[section.id] = section.name;
-          });
+          (Array.isArray(data.data) ? data.data : []).forEach(
+            (section: any) => {
+              map[section.id] = section.name;
+            }
+          );
           setSectionMap(map);
         }
       } catch {}
@@ -1000,12 +1007,41 @@ export default function Dashboard() {
 
             {/* Grade Button */}
             <Button
-              className="w-full bg-white text-purple-800"
+              className="w-full bg-white text-purple-800 flex items-center justify-center"
               onClick={handleGradeEssay}
               type="button"
+              disabled={gradingLoading} // <-- Disable when loading
             >
-              <FaCircleCheck className="mr-2" />
-              Grade Essay
+              {gradingLoading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-purple-800"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Grading...
+                </>
+              ) : (
+                <>
+                  <FaCircleCheck className="mr-2" />
+                  Grade Essay
+                </>
+              )}
             </Button>
             {uploadError && (
               <div className="text-red-400 mt-2">{uploadError}</div>
