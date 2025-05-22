@@ -115,13 +115,16 @@ export default function Dashboard() {
     formData.append("rubrics", JSON.stringify(rubricObj)); // <-- send as object
 
     try {
-      const res = await fetch("http://localhost:3000/api/v1/essays/grade", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/essays/grade`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Upload failed");
@@ -166,7 +169,7 @@ export default function Dashboard() {
     if (!editingResult) return;
     try {
       const res = await fetch(
-        `http://localhost:3000/api/v1/grades/${editingResult.id}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/grades/${editingResult.id}`,
         {
           method: "PUT",
           headers: {
@@ -279,7 +282,7 @@ export default function Dashboard() {
       if (!editingGrades) return;
       try {
         const res = await fetch(
-          `http://localhost:3000/api/v1/grades/${editingGrades.id}`,
+          `${import.meta.env.VITE_API_URL}/api/v1/grades/${editingGrades.id}`,
           {
             method: "PUT",
             headers: {
@@ -307,7 +310,7 @@ export default function Dashboard() {
     useEffect(() => {
       setLoading(true);
       setError("");
-      fetch("http://localhost:3000/api/v1/section", {
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/section`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(async (res) => {
@@ -324,7 +327,7 @@ export default function Dashboard() {
 
     // Fetch essays (for mapping student to essayId)
     useEffect(() => {
-      fetch("http://localhost:3000/api/v1/essays/", {
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/essays/`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(async (res) => {
@@ -340,7 +343,9 @@ export default function Dashboard() {
       setStudentsLoading(true);
       setStudentsError("");
       fetch(
-        `http://localhost:3000/api/v1/student/section/${selectedSection.id}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/student/section/${
+          selectedSection.id
+        }`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -379,7 +384,9 @@ export default function Dashboard() {
 
       try {
         const res = await fetch(
-          `http://localhost:3000/api/v1/grades/essay/${essayId}/student/${studentId}`,
+          `${
+            import.meta.env.VITE_API_URL
+          }/api/v1/grades/essay/${essayId}/student/${studentId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -437,7 +444,9 @@ export default function Dashboard() {
                           return;
                         try {
                           const res = await fetch(
-                            `http://localhost:3000/api/v1/section/${section.id}`,
+                            `${import.meta.env.VITE_API_URL}/api/v1/section/${
+                              section.id
+                            }`,
                             {
                               method: "DELETE",
                               headers: { Authorization: `Bearer ${token}` },
@@ -510,7 +519,9 @@ export default function Dashboard() {
                           return;
                         try {
                           const res = await fetch(
-                            `http://localhost:3000/api/v1/student/${student.id}`,
+                            `${import.meta.env.VITE_API_URL}/api/v1/student/${
+                              student.id
+                            }`,
                             {
                               method: "DELETE",
                               headers: { Authorization: `Bearer ${token}` },
@@ -672,7 +683,9 @@ export default function Dashboard() {
           if (result.studentId && !studentInfoMap[result.studentId]) {
             try {
               const res = await fetch(
-                `http://localhost:3000/api/v1/student/${result.studentId}`,
+                `${import.meta.env.VITE_API_URL}/api/v1/student/${
+                  result.studentId
+                }`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
                 }
@@ -695,9 +708,12 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/v1/section", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/section`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (res.ok) {
           const data = await res.json();
           const map: { [id: string]: string } = {};

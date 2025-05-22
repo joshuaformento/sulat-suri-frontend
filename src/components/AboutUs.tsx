@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 // You may need to adjust the import paths based on your project structure
-import joshuaImg from "../assets/images/formento.png";
-import isaacImg from "../assets/images/goco.png";
-import danielImg from "../assets/images/teves.jpg";
-
+const joshuaImg = "/assets/images/formento.png";
+const isaacImg = "/assets/images/goco.png";
+const danielImg = "/assets/images/teves.jpg";
 export default function AboutUs() {
   const navigate = useNavigate();
 

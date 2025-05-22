@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 
 export default function RequestVerification() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -12,18 +14,25 @@ export default function RequestVerification() {
     setStatus("loading");
     setMessage("");
     try {
-      const res = await fetch("http://localhost:3000/api/v1/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/verify-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         setStatus("success");
-        setMessage(data.message || "Verification email sent! Please check your inbox.");
+        setMessage(
+          data.message || "Verification email sent! Please check your inbox."
+        );
       } else {
         setStatus("error");
-        setMessage(data.error || data.message || "Failed to send verification email.");
+        setMessage(
+          data.error || data.message || "Failed to send verification email."
+        );
       }
     } catch {
       setStatus("error");
@@ -44,15 +53,23 @@ export default function RequestVerification() {
             type="email"
             required
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="rounded px-2 py-1 border"
           />
-          <Button type="submit" className="w-full" disabled={status === "loading"}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={status === "loading"}
+          >
             {status === "loading" ? "Sending..." : "Send Verification Email"}
           </Button>
         </form>
         {message && (
-          <div className={`mt-4 text-center ${status === "success" ? "text-green-600" : "text-red-600"}`}>
+          <div
+            className={`mt-4 text-center ${
+              status === "success" ? "text-green-600" : "text-red-600"
+            }`}
+          >
             {message}
           </div>
         )}

@@ -23,7 +23,7 @@ export default function StudentsForm() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("http://localhost:3000/api/v1/student", {
+        const res = await fetch(`${process.env.API_URL}/api/v1/student`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch students");

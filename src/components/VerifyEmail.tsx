@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 
 export default function VerifyEmail() {
   const { token } = useParams<{ token: string }>();
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const [status, setStatus] = useState<"verifying" | "success" | "error">(
+    "verifying"
+  );
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     if (token) {
-      fetch(`http://localhost:3000/api/v1/auth/verify-email/${token}`)
+      fetch(`${process.env.API_URL}/api/v1/auth/verify-email/${token}`)
         .then(async (res) => {
           const data = await res.json();
           if (res.ok) {
@@ -47,7 +49,10 @@ export default function VerifyEmail() {
             <Button className="w-full" onClick={() => navigate("/login")}>
               Go to Login
             </Button>
-            <Link to="/verify-email" className="text-purple-300 hover:underline">
+            <Link
+              to="/verify-email"
+              className="text-purple-300 hover:underline"
+            >
               Verify your email
             </Link>
           </>
