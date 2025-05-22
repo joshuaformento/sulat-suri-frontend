@@ -13,6 +13,8 @@ import {
 import { IoMdCloudUpload } from "react-icons/io";
 import { LuNotepadText } from "react-icons/lu";
 import { FaCircleCheck } from "react-icons/fa6";
+import { FaRegCheckCircle } from "react-icons/fa"; // Add this for Grading icon
+import { PiUsersThree } from "react-icons/pi"; // Add this for Sections icon
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth";
 
@@ -390,7 +392,8 @@ export default function Dashboard() {
                 }}
               >
                 {sidebarCollapsed ? (
-                  <span className="sr-only">Grading</span>
+                  // Use icon instead of text when collapsed
+                  <FaRegCheckCircle className="w-6 h-6 text-purple-900" />
                 ) : (
                   "Grading"
                 )}
@@ -414,7 +417,8 @@ export default function Dashboard() {
                 }}
               >
                 {sidebarCollapsed ? (
-                  <span className="sr-only">Sections</span>
+                  // Use icon instead of text when collapsed
+                  <PiUsersThree className="w-6 h-6 text-purple-900" />
                 ) : (
                   "Sections"
                 )}
@@ -429,20 +433,6 @@ export default function Dashboard() {
         </div>
         {!sidebarCollapsed && (
           <>
-            <div className="mt-8">
-              <h2 className="text-sm font-semibold">Previous Outputs</h2>
-              <ul className="mt-2 space-y-1 text-gray-300">
-                <li className="cursor-pointer hover:text-white">
-                  USER STORY.pdf
-                </li>
-                <li className="cursor-pointer hover:text-white">
-                  grades 2nd sem.pdf
-                </li>
-                <li className="cursor-pointer hover:text-white">
-                  grades 2nd sem.pdf
-                </li>
-              </ul>
-            </div>
             <div className="mt-auto pt-8">
               <Button
                 variant="ghost"
