@@ -163,7 +163,7 @@ export function SignupForm({
 
           <div className="relative hidden md:flex md:flex-col items-center justify-center row-span-2 -inset-x-5">
             <img
-              src="./src/assets/images/logo.png"
+              src="/assets/images/logo.png"
               alt="Image"
               className="absolute inset-0 object-cover dark:brightness-[0.2] dark:grayscale md:scale-90 inset-y-16"
             />
