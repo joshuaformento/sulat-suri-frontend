@@ -1157,7 +1157,10 @@ export default function Dashboard() {
             {/* Results Section */}
             <Card className="p-6 mt-6 bg-purple-900 text-white">
               <h2 className="font-semibold">Grading Results</h2>
-              {gradingResults.length === 0 ? (
+              {/* Option 2: Only render grading results after sectionMap is loaded */}
+              {Object.keys(sectionMap).length === 0 ? (
+                <div className="text-gray-300 mt-4">Loading...</div>
+              ) : gradingResults.length === 0 ? (
                 <div className="text-gray-300 mt-4">
                   No grading results yet.
                 </div>
