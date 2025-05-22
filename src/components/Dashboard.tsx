@@ -1074,11 +1074,11 @@ export default function Dashboard() {
                         <span className="ml-4 font-semibold">
                           Section:
                         </span>{" "}
-                        {
-                          sectionMap[
-                            studentInfoMap[result.studentId]?.sectionId
-                          ]
-                        }
+                        {studentInfoMap[result.studentId]?.sectionId
+                          ? sectionMap[
+                              studentInfoMap[result.studentId].sectionId
+                            ] || "Loading..."
+                          : "Loading..."}
                       </div>
                       {editingResult?.id === result.id ? (
                         <div>
