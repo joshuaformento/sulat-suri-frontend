@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [editingResult, setEditingResult] = useState<any>(null);
   const [editGrades, setEditGrades] = useState<any>({});
   const [gradingLoading, setGradingLoading] = useState(false); // <-- Add this state
+  const essayInputRef = useRef<HTMLInputElement>(null);
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
@@ -139,6 +140,7 @@ export default function Dashboard() {
       setEssayFiles([]);
       setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
+      if (essayInputRef.current) essayInputRef.current.value = ""; // <-- Add this
       setGradingResults(Array.isArray(result) ? result : [result]);
       localStorage.setItem(
         "gradingResults",
@@ -911,9 +913,10 @@ export default function Dashboard() {
                 <input
                   type="file"
                   id="essay-upload"
+                  ref={essayInputRef}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   accept=".pdf,.docx,.txt"
-                  multiple // allow multiple files
+                  multiple
                   onChange={handleEssayFileChange}
                 />
                 <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
