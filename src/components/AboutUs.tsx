@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 // You may need to adjust the import paths based on your project structure
 import joshuaImg from "../assets/images/formento.png";
@@ -8,6 +9,10 @@ import danielImg from "../assets/images/teves.jpg";
 
 export default function AboutUs() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Sulat-Suri | About Us";
+  }, []);
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-600 to-purple-950 relative">

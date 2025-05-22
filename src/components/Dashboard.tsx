@@ -526,6 +526,14 @@ export default function Dashboard() {
     fetchSections();
   }, [token]);
 
+  useEffect(() => {
+    if (activeTab === "grading") {
+      document.title = "Sulat-Suri | Grading";
+    } else if (activeTab === "sections") {
+      document.title = "Sulat-Suri | Sections";
+    }
+  }, [activeTab]);
+
   return (
     <div className="flex h-screen bg-gradient-to-r from-purple-600 to-purple-950 text-white">
       {/* Burger menu for mobile and desktop */}
