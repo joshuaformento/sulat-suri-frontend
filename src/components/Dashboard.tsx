@@ -31,7 +31,6 @@ export default function Dashboard() {
 
   // Grading form state
   const [essayFiles, setEssayFiles] = useState<File[]>([]); // changed to array
-  const [referenceFile, setReferenceFile] = useState<File | null>(null);
   const [rubrics, setRubrics] = useState([{ name: "", description: "" }]);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -49,23 +48,12 @@ export default function Dashboard() {
   const [editGrades, setEditGrades] = useState<any>({});
   const [gradingLoading, setGradingLoading] = useState(false); // <-- Add this state
   const essayInputRef = useRef<HTMLInputElement>(null);
-  const referenceInputRef = useRef<HTMLInputElement>(null); // <-- Add this
 
   const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError("");
     setUploadSuccess("");
     if (e.target.files) {
       setEssayFiles(Array.from(e.target.files)); // store all files
-    }
-  };
-
-  const handleReferenceFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setUploadError("");
-    setUploadSuccess("");
-    if (e.target.files && e.target.files[0]) {
-      setReferenceFile(e.target.files[0]);
     }
   };
 
@@ -98,10 +86,6 @@ export default function Dashboard() {
       setUploadError("Please select at least one essay file.");
       return;
     }
-    if (!referenceFile) {
-      setUploadError("Please select a reference file.");
-      return;
-    }
     if (rubrics.some((r) => !r.name.trim() || !r.description.trim())) {
       setUploadError("Please fill out all rubric fields.");
       return;
@@ -116,7 +100,6 @@ export default function Dashboard() {
 
     const formData = new FormData();
     essayFiles.forEach((file) => formData.append("essays", file));
-    formData.append("reference", referenceFile);
     formData.append("rubrics", JSON.stringify(rubricObj));
 
     try {
@@ -135,14 +118,10 @@ export default function Dashboard() {
         throw new Error(data.message || "Upload failed");
       }
       const result = await res.json();
-      setUploadSuccess(
-        "Essays and reference uploaded and graded successfully!"
-      );
+      setUploadSuccess("Essays uploaded and graded successfully!");
       setEssayFiles([]);
-      setReferenceFile(null);
       setRubrics([{ name: "", description: "" }]);
       if (essayInputRef.current) essayInputRef.current.value = "";
-      if (referenceInputRef.current) referenceInputRef.current.value = "";
 
       // --- Fetch missing student and section info before updating gradingResults ---
       const newResults = Array.isArray(result) ? result : [result];
@@ -1126,35 +1105,6 @@ export default function Dashboard() {
                     className="cursor-pointer bg-purple-500 text-white px-4 py-2 hover:bg-purple-600"
                   >
                     Choose Files
-                  </label>
-                </div>
-              </div>
-            </Card>
-
-            {/* Upload Reference Answer Section */}
-            <Card className="p-6 mb-6 bg-purple-900 text-white">
-              <h2 className="font-semibold mb-2">
-                <IoMdCloudUpload className="inline-block scale-150 mr-3" />
-                Upload Reference Answer (PDF)
-              </h2>
-              <div className="relative w-full">
-                <input
-                  type="file"
-                  id="reference-upload"
-                  ref={referenceInputRef} // <-- Attach the ref
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  accept=".pdf,.docx,.txt"
-                  onChange={handleReferenceFileChange}
-                />
-                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                  <span className="flex-grow px-3 py-2 text-gray-300">
-                    {referenceFile ? referenceFile.name : "No file chosen"}
-                  </span>
-                  <label
-                    htmlFor="reference-upload"
-                    className="cursor-pointer bg-purple-500 text-white px-4 py-2 hover:bg-purple-600"
-                  >
-                    Choose File
                   </label>
                 </div>
               </div>
