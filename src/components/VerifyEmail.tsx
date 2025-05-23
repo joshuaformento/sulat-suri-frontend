@@ -12,7 +12,7 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     if (token) {
-      fetch(`${process.env.API_URL}/api/v1/auth/verify-email/${token}`)
+      fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/verify-email/${token}`)
         .then(async (res) => {
           const data = await res.json();
           if (res.ok) {
